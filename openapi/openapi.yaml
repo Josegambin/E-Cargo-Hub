@@ -1,0 +1,1493 @@
+openapi: 3.0.3
+
+info:
+  title: Simulador Logístico
+  version: 1.0.0
+  description: |
+    El sistema permite:
+      - Gestionar vehículos.
+      - Gestionar almacenes.
+      - Crear rutas.
+      - Crear y controlar simulaciones.
+      - Enviar comandos a vehículos.
+      - Consultar posiciones.
+      - Gestionar alertas.
+      - Integrarse con GraphHopper y OpenStreetMap.
+      - Distribuir eventos en tiempo real mediante Kafka.
+      - Exponer actualizaciones al frontend mediante WebSocket.
+
+  contact:
+    name: Simulador Logístico
+    email: admin@simulador-logistico.local
+
+servers:
+  - url: http://localhost:8080
+    description: Desarrollo local
+
+tags:
+
+  - name: Vehicles
+    description: Gestión de vehículos
+
+  - name: Warehouses
+    description: Gestión de almacenes
+
+  - name: Routes
+    description: Gestión de rutas
+
+  - name: Simulations
+    description: Gestión y control de simulaciones
+
+  - name: Commands
+    description: Comandos enviados a vehículos
+
+  - name: Positions
+    description: Posiciones de vehículos
+
+  - name: Alerts
+    description: Alertas generadas durante las simulaciones
+
+
+paths:
+
+  # ============================================================
+  # VEHICLES
+  # ============================================================
+
+  /api/vehicles:
+
+    get:
+      tags:
+        - Vehicles
+
+      summary: Obtener vehículos
+
+      operationId: getVehicles
+
+      responses:
+
+        '200':
+          description: Lista de vehículos
+
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vehicle'
+
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+
+    post:
+      tags:
+        - Vehicles
+
+      summary: Crear vehículo
+
+      operationId: createVehicle
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateVehicleRequest'
+
+      responses:
+
+        '201':
+          description: Vehículo creado
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+
+  /api/vehicles/{vehicleId}:
+
+    get:
+      tags:
+        - Vehicles
+
+      summary: Obtener vehículo
+
+      operationId: getVehicle
+
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+
+      responses:
+
+        '200':
+          description: Vehículo
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+
+    put:
+      tags:
+        - Vehicles
+
+      summary: Actualizar vehículo
+
+      operationId: updateVehicle
+
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateVehicleRequest'
+
+      responses:
+
+        '200':
+          description: Vehículo actualizado
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+
+    delete:
+      tags:
+        - Vehicles
+
+      summary: Eliminar vehículo
+
+      operationId: deleteVehicle
+
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+
+      responses:
+
+        '204':
+          description: Vehículo eliminado
+
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+
+  # ============================================================
+  # WAREHOUSES
+  # ============================================================
+
+  /api/warehouses:
+
+    get:
+      tags:
+        - Warehouses
+
+      summary: Obtener almacenes
+
+      operationId: getWarehouses
+
+      responses:
+
+        '200':
+          description: Lista de almacenes
+
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Warehouse'
+
+
+    post:
+      tags:
+        - Warehouses
+
+      summary: Crear almacén
+
+      operationId: createWarehouse
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWarehouseRequest'
+
+      responses:
+
+        '201':
+          description: Almacén creado
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Warehouse'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+
+  /api/warehouses/{warehouseId}:
+
+    get:
+      tags:
+        - Warehouses
+
+      summary: Obtener almacén
+
+      operationId: getWarehouse
+
+      parameters:
+        - $ref: '#/components/parameters/WarehouseId'
+
+      responses:
+
+        '200':
+          description: Almacén
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Warehouse'
+
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+
+    put:
+      tags:
+        - Warehouses
+
+      summary: Actualizar almacén
+
+      operationId: updateWarehouse
+
+      parameters:
+        - $ref: '#/components/parameters/WarehouseId'
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWarehouseRequest'
+
+      responses:
+
+        '200':
+          description: Almacén actualizado
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Warehouse'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+
+    delete:
+      tags:
+        - Warehouses
+
+      summary: Eliminar almacén
+
+      operationId: deleteWarehouse
+
+      parameters:
+        - $ref: '#/components/parameters/WarehouseId'
+
+      responses:
+
+        '204':
+          description: Almacén eliminado
+
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+
+  # ============================================================
+  # ROUTES
+  # ============================================================
+
+  /api/routes:
+
+    get:
+      tags:
+        - Routes
+
+      summary: Obtener rutas
+
+      operationId: getRoutes
+
+      responses:
+
+        '200':
+          description: Lista de rutas
+
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Route'
+
+
+    post:
+      tags:
+        - Routes
+
+      summary: Crear una ruta
+
+      operationId: createRoute
+
+      description: |
+        Crea una ruta entre dos puntos.
+        La ruta podrá ser calculada posteriormente mediante GraphHopper
+        utilizando datos de OpenStreetMap.
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateRouteRequest'
+
+      responses:
+
+        '201':
+          description: Ruta creada
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+
+  /api/routes/{routeId}:
+
+    get:
+      tags:
+        - Routes
+
+      summary: Obtener ruta
+
+      operationId: getRoute
+
+      parameters:
+        - $ref: '#/components/parameters/RouteId'
+
+      responses:
+
+        '200':
+          description: Ruta
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Route'
+
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+
+  # ============================================================
+  # SIMULATIONS
+  # ============================================================
+
+  /api/simulations:
+
+    get:
+      tags:
+        - Simulations
+
+      summary: Obtener simulaciones
+
+      operationId: getSimulations
+
+      responses:
+
+        '200':
+          description: Lista de simulaciones
+
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Simulation'
+
+
+    post:
+      tags:
+        - Simulations
+
+      summary: Crear simulación
+
+      operationId: createSimulation
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSimulationRequest'
+
+      responses:
+
+        '201':
+          description: Simulación creada
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Simulation'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+
+  /api/simulations/{simulationId}:
+
+    get:
+      tags:
+        - Simulations
+
+      summary: Obtener simulación
+
+      operationId: getSimulation
+
+      parameters:
+        - $ref: '#/components/parameters/SimulationId'
+
+      responses:
+
+        '200':
+          description: Simulación
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Simulation'
+
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+
+  /api/simulations/{simulationId}/start:
+
+    post:
+      tags:
+        - Simulations
+
+      summary: Iniciar simulación
+
+      operationId: startSimulation
+
+      parameters:
+        - $ref: '#/components/parameters/SimulationId'
+
+      responses:
+
+        '200':
+          description: Simulación iniciada
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Simulation'
+
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+
+  /api/simulations/{simulationId}/pause:
+
+    post:
+      tags:
+        - Simulations
+
+      summary: Pausar simulación
+
+      operationId: pauseSimulation
+
+      parameters:
+        - $ref: '#/components/parameters/SimulationId'
+
+      responses:
+
+        '200':
+          description: Simulación pausada
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Simulation'
+
+
+  /api/simulations/{simulationId}/resume:
+
+    post:
+      tags:
+        - Simulations
+
+      summary: Reanudar simulación
+
+      operationId: resumeSimulation
+
+      parameters:
+        - $ref: '#/components/parameters/SimulationId'
+
+      responses:
+
+        '200':
+          description: Simulación reanudada
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Simulation'
+
+
+  /api/simulations/{simulationId}/stop:
+
+    post:
+      tags:
+        - Simulations
+
+      summary: Detener simulación
+
+      operationId: stopSimulation
+
+      parameters:
+        - $ref: '#/components/parameters/SimulationId'
+
+      responses:
+
+        '200':
+          description: Simulación detenida
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Simulation'
+
+
+  # ============================================================
+  # VEHICLE COMMANDS
+  # ============================================================
+
+  /api/vehicles/{vehicleId}/commands:
+
+    post:
+      tags:
+        - Commands
+
+      summary: Enviar comando a un vehículo
+
+      operationId: sendVehicleCommand
+
+      description: |
+        Envía un comando al vehículo.
+
+        El backend publicará el comando en Kafka.
+        El simulador Python consumirá el evento y modificará
+        el comportamiento del vehículo.
+
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleCommandRequest'
+
+      responses:
+
+        '202':
+          description: Comando aceptado
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleCommand'
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+
+  # ============================================================
+  # POSITIONS
+  # ============================================================
+
+  /api/vehicles/{vehicleId}/position:
+
+    get:
+      tags:
+        - Positions
+
+      summary: Obtener posición actual del vehículo
+
+      operationId: getVehiclePosition
+
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+
+      responses:
+
+        '200':
+          description: Posición actual
+
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehiclePosition'
+
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+
+  # ============================================================
+  # ALERTS
+  # ============================================================
+
+  /api/alerts:
+
+    get:
+      tags:
+        - Alerts
+
+      summary: Obtener alertas
+
+      operationId: getAlerts
+
+      parameters:
+
+        - name: vehicleId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+
+        - name: simulationId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+
+        - name: severity
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/AlertSeverity'
+
+      responses:
+
+        '200':
+          description: Lista de alertas
+
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VehicleAlert'
+
+
+# ================================================================
+# COMPONENTS
+# ================================================================
+
+components:
+
+  # ============================================================
+  # PARAMETERS
+  # ============================================================
+
+  parameters:
+
+    VehicleId:
+      name: vehicleId
+      in: path
+      required: true
+      description: Identificador del vehículo
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+
+    WarehouseId:
+      name: warehouseId
+      in: path
+      required: true
+      description: Identificador del almacén
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+
+    RouteId:
+      name: routeId
+      in: path
+      required: true
+      description: Identificador de la ruta
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+
+    SimulationId:
+      name: simulationId
+      in: path
+      required: true
+      description: Identificador de la simulación
+      schema:
+        type: integer
+        format: int64
+        minimum: 1
+
+
+  # ============================================================
+  # SCHEMAS
+  # ============================================================
+
+  schemas:
+
+    # ------------------------------------------------------------
+    # VEHICLE
+    # ------------------------------------------------------------
+
+    Vehicle:
+      type: object
+
+      required:
+        - id
+        - name
+        - type
+        - maxSpeed
+        - status
+
+      properties:
+
+        id:
+          type: integer
+          format: int64
+
+        name:
+          type: string
+          example: TRUCK-001
+
+        type:
+          $ref: '#/components/schemas/VehicleType'
+
+        maxSpeed:
+          type: number
+          format: double
+          minimum: 0
+          example: 120
+
+        status:
+          $ref: '#/components/schemas/VehicleStatus'
+
+        currentPosition:
+          $ref: '#/components/schemas/VehiclePosition'
+
+
+    CreateVehicleRequest:
+      type: object
+
+      required:
+        - name
+        - type
+        - maxSpeed
+
+      properties:
+
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: TRUCK-001
+
+        type:
+          $ref: '#/components/schemas/VehicleType'
+
+        maxSpeed:
+          type: number
+          format: double
+          minimum: 0
+          example: 120
+
+
+    UpdateVehicleRequest:
+      type: object
+
+      required:
+        - name
+        - type
+        - maxSpeed
+
+      properties:
+
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+
+        type:
+          $ref: '#/components/schemas/VehicleType'
+
+        maxSpeed:
+          type: number
+          format: double
+          minimum: 0
+
+
+    VehicleType:
+      type: string
+
+      enum:
+        - CAR
+        - VAN
+        - TRUCK
+
+
+    VehicleStatus:
+      type: string
+
+      enum:
+        - IDLE
+        - RUNNING
+        - PAUSED
+        - STOPPED
+        - ERROR
+
+
+    # ------------------------------------------------------------
+    # WAREHOUSE
+    # ------------------------------------------------------------
+
+    Warehouse:
+      type: object
+
+      required:
+        - id
+        - name
+        - location
+
+      properties:
+
+        id:
+          type: integer
+          format: int64
+
+        name:
+          type: string
+          example: Almacén Alicante
+
+        address:
+          type: string
+          example: Avenida de Elche 25, Alicante
+
+        location:
+          $ref: '#/components/schemas/GeoPoint'
+
+
+    CreateWarehouseRequest:
+      type: object
+
+      required:
+        - name
+        - location
+
+      properties:
+
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+
+        address:
+          type: string
+          maxLength: 250
+
+        location:
+          $ref: '#/components/schemas/GeoPoint'
+
+
+    UpdateWarehouseRequest:
+      type: object
+
+      required:
+        - name
+        - location
+
+      properties:
+
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+
+        address:
+          type: string
+          maxLength: 250
+
+        location:
+          $ref: '#/components/schemas/GeoPoint'
+
+
+    # ------------------------------------------------------------
+    # ROUTE
+    # ------------------------------------------------------------
+
+    Route:
+      type: object
+
+      required:
+        - id
+        - name
+        - origin
+        - destination
+        - distanceMeters
+        - durationSeconds
+        - status
+
+      properties:
+
+        id:
+          type: integer
+          format: int64
+
+        name:
+          type: string
+          example: Alicante - Madrid
+
+        origin:
+          $ref: '#/components/schemas/GeoPoint'
+
+        destination:
+          $ref: '#/components/schemas/GeoPoint'
+
+        distanceMeters:
+          type: number
+          format: double
+          example: 425000
+
+        durationSeconds:
+          type: integer
+          format: int64
+          example: 14400
+
+        status:
+          $ref: '#/components/schemas/RouteStatus'
+
+        geometry:
+          $ref: '#/components/schemas/GeoLineString'
+
+
+    CreateRouteRequest:
+      type: object
+
+      required:
+        - name
+        - origin
+        - destination
+
+      properties:
+
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+
+        origin:
+          $ref: '#/components/schemas/GeoPoint'
+
+        destination:
+          $ref: '#/components/schemas/GeoPoint'
+
+
+    RouteStatus:
+      type: string
+
+      enum:
+        - CREATED
+        - CALCULATING
+        - READY
+        - ERROR
+
+
+    # ------------------------------------------------------------
+    # SIMULATION
+    # ------------------------------------------------------------
+
+    Simulation:
+      type: object
+
+      required:
+        - id
+        - name
+        - status
+        - routeId
+        - vehicleId
+
+      properties:
+
+        id:
+          type: integer
+          format: int64
+
+        name:
+          type: string
+          example: Simulación Alicante-Madrid
+
+        vehicleId:
+          type: integer
+          format: int64
+
+        routeId:
+          type: integer
+          format: int64
+
+        status:
+          $ref: '#/components/schemas/SimulationStatus'
+
+        startedAt:
+          type: string
+          format: date-time
+
+        finishedAt:
+          type: string
+          format: date-time
+
+        simulationSpeed:
+          type: number
+          format: double
+          minimum: 0
+          example: 1
+
+
+    CreateSimulationRequest:
+      type: object
+
+      required:
+        - name
+        - vehicleId
+        - routeId
+
+      properties:
+
+        name:
+          type: string
+          minLength: 1
+          maxLength: 150
+
+        vehicleId:
+          type: integer
+          format: int64
+
+        routeId:
+          type: integer
+          format: int64
+
+        simulationSpeed:
+          type: number
+          format: double
+          minimum: 0
+          default: 1
+
+
+    SimulationStatus:
+      type: string
+
+      enum:
+        - CREATED
+        - RUNNING
+        - PAUSED
+        - FINISHED
+        - STOPPED
+        - ERROR
+
+
+    # ------------------------------------------------------------
+    # VEHICLE POSITION
+    # ------------------------------------------------------------
+
+    VehiclePosition:
+      type: object
+
+      required:
+        - vehicleId
+        - latitude
+        - longitude
+        - speed
+        - heading
+        - timestamp
+
+      properties:
+
+        vehicleId:
+          type: integer
+          format: int64
+
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          example: 38.3452
+
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          example: -0.4810
+
+        speed:
+          type: number
+          format: double
+          minimum: 0
+          example: 92.5
+
+        speedLimit:
+          type: number
+          format: double
+          minimum: 0
+          example: 90
+
+        acceleration:
+          type: number
+          format: double
+          example: 0.8
+
+        heading:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 360
+          example: 274.2
+
+        timestamp:
+          type: string
+          format: date-time
+
+
+    # ------------------------------------------------------------
+    # COMMANDS
+    # ------------------------------------------------------------
+
+    VehicleCommandRequest:
+      type: object
+
+      required:
+        - command
+
+      properties:
+
+        command:
+          $ref: '#/components/schemas/VehicleCommandType'
+
+        value:
+          type: number
+          format: double
+          description: |
+            Valor asociado al comando.
+            Por ejemplo, velocidad objetivo para SET_SPEED.
+          example: 80
+
+
+    VehicleCommand:
+      type: object
+
+      required:
+        - id
+        - vehicleId
+        - command
+        - createdAt
+
+      properties:
+
+        id:
+          type: integer
+          format: int64
+
+        vehicleId:
+          type: integer
+          format: int64
+
+        command:
+          $ref: '#/components/schemas/VehicleCommandType'
+
+        value:
+          type: number
+          format: double
+
+        createdAt:
+          type: string
+          format: date-time
+
+
+    VehicleCommandType:
+      type: string
+
+      enum:
+        - START
+        - PAUSE
+        - RESUME
+        - STOP
+        - SET_SPEED
+        - INCREASE_SPEED
+        - DECREASE_SPEED
+        - EMERGENCY_BRAKE
+
+
+    # ------------------------------------------------------------
+    # ALERTS
+    # ------------------------------------------------------------
+
+    VehicleAlert:
+      type: object
+
+      required:
+        - id
+        - vehicleId
+        - type
+        - severity
+        - message
+        - timestamp
+
+      properties:
+
+        id:
+          type: integer
+          format: int64
+
+        vehicleId:
+          type: integer
+          format: int64
+
+        simulationId:
+          type: integer
+          format: int64
+
+        type:
+          $ref: '#/components/schemas/AlertType'
+
+        severity:
+          $ref: '#/components/schemas/AlertSeverity'
+
+        message:
+          type: string
+          example: El vehículo supera el límite de velocidad.
+
+        currentSpeed:
+          type: number
+          format: double
+          example: 92
+
+        speedLimit:
+          type: number
+          format: double
+          example: 80
+
+        timestamp:
+          type: string
+          format: date-time
+
+
+    AlertType:
+      type: string
+
+      enum:
+        - SPEED_LIMIT_EXCEEDED
+        - EMERGENCY_BRAKING
+        - VEHICLE_STOPPED
+        - ROUTE_DEVIATION
+        - COMMUNICATION_ERROR
+        - SIMULATION_ERROR
+
+
+    AlertSeverity:
+      type: string
+
+      enum:
+        - INFO
+        - WARNING
+        - CRITICAL
+
+
+    # ------------------------------------------------------------
+    # GEO
+    # ------------------------------------------------------------
+
+    GeoPoint:
+      type: object
+
+      description: Coordenadas geográficas WGS84.
+
+      required:
+        - latitude
+        - longitude
+
+      properties:
+
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          example: 38.3452
+
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          example: -0.4810
+
+
+    GeoLineString:
+      type: object
+
+      description: |
+        Geometría de una ruta como una secuencia de coordenadas
+        geográficas.
+
+      required:
+        - type
+        - coordinates
+
+      properties:
+
+        type:
+          type: string
+          enum:
+            - LineString
+
+        coordinates:
+          type: array
+          minItems: 2
+
+          items:
+            type: array
+            minItems: 2
+            maxItems: 2
+
+            items:
+              type: number
+              format: double
+
+
+    # ------------------------------------------------------------
+    # ERRORS
+    # ------------------------------------------------------------
+
+    ApiError:
+      type: object
+
+      required:
+        - timestamp
+        - status
+        - error
+        - message
+        - path
+
+      properties:
+
+        timestamp:
+          type: string
+          format: date-time
+
+        status:
+          type: integer
+          example: 404
+
+        error:
+          type: string
+          example: NOT_FOUND
+
+        message:
+          type: string
+          example: Vehicle not found
+
+        path:
+          type: string
+          example: /api/vehicles/10
+
+
+  # ============================================================
+  # RESPONSES
+  # ============================================================
+
+  responses:
+
+    BadRequest:
+      description: Petición incorrecta
+
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+
+    NotFound:
+      description: Recurso no encontrado
+
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+
+    InternalServerError:
+      description: Error interno del servidor
+
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
