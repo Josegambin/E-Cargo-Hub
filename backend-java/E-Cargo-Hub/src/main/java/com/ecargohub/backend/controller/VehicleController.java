@@ -1,19 +1,18 @@
 package com.ecargohub.backend.controller;
 
-import com.ecargohub.backend.api.VehiclesApi;
-import com.ecargohub.backend.api.model.CreateVehicleRequest;
-import com.ecargohub.backend.api.model.UpdateVehicleRequest;
-import com.ecargohub.backend.api.model.Vehicle;
+import com.ecargohub.backend.dto.vehicle.CreateVehicleRequest;
+import com.ecargohub.backend.dto.vehicle.UpdateVehicleRequest;
+import com.ecargohub.backend.dto.vehicle.VehicleDto;
 import com.ecargohub.backend.interfaces.VehicleService;
+import jakarta.validation.Valid;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.net.URI;
 import java.util.List;
 
 @RestController
-public class VehicleController implements VehiclesApi {
+@RequestMapping("/api/vehicles")
+public class VehicleController {
 
     private final VehicleService vehicleService;
 
@@ -21,53 +20,31 @@ public class VehicleController implements VehiclesApi {
         this.vehicleService = vehicleService;
     }
 
-    @Override
-    public ResponseEntity<Vehicle> createVehicle(
-            CreateVehicleRequest createVehicleRequest) {
-
-        Vehicle vehicle =
-                vehicleService.create(createVehicleRequest);
-
-        return ResponseEntity
-                .created(
-                        URI.create(
-                                "/api/vehicles/"
-                                        + vehicle.getId()))
-                .body(vehicle);
+    @GetMapping
+    public List<VehicleDto> getAll() {
+        return vehicleService.findAll();
     }
 
-    @Override
-    public ResponseEntity<List<Vehicle>> getVehicles() {
-
-        return ResponseEntity.ok(
-                vehicleService.findAll());
+    @GetMapping("/{vehicleId}")
+    public VehicleDto getOne(@PathVariable Long vehicleId) {
+        return vehicleService.findById(vehicleId);
     }
 
-    @Override
-    public ResponseEntity<Vehicle> getVehicle(
-            Long vehicleId) {
-
-        return ResponseEntity.ok(
-                vehicleService.findById(vehicleId));
+    @PostMapping
+    @ResponseStatus(HttpStatus.CREATED)
+    public VehicleDto create(@Valid @RequestBody CreateVehicleRequest request) {
+        return vehicleService.create(request);
     }
 
-    @Override
-    public ResponseEntity<Vehicle> updateVehicle(
-            Long vehicleId,
-            UpdateVehicleRequest updateVehicleRequest) {
-
-        return ResponseEntity.ok(
-                vehicleService.update(
-                        vehicleId,
-                        updateVehicleRequest));
+    @PutMapping("/{vehicleId}")
+    public VehicleDto update(@PathVariable Long vehicleId,
+                             @Valid @RequestBody UpdateVehicleRequest request) {
+        return vehicleService.update(vehicleId, request);
     }
 
-    @Override
-    public ResponseEntity<Void> deleteVehicle(
-            Long vehicleId) {
-
+    @DeleteMapping("/{vehicleId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Long vehicleId) {
         vehicleService.delete(vehicleId);
-
-        return ResponseEntity.noContent().build();
     }
 }

@@ -1,6 +1,4 @@
-package com.ecargohub.backend.domain.enums;
-
-import com.ecargohub.backend.entity.GeoPointEmbeddable;
+package com.ecargohub.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;

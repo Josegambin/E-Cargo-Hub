@@ -1,22 +1,20 @@
 package com.ecargohub.backend.interfaces;
 
-import com.ecargohub.backend.api.model.CreateVehicleRequest;
-import com.ecargohub.backend.api.model.UpdateVehicleRequest;
-import com.ecargohub.backend.api.model.Vehicle;
+import com.ecargohub.backend.dto.vehicle.CreateVehicleRequest;
+import com.ecargohub.backend.dto.vehicle.UpdateVehicleRequest;
+import com.ecargohub.backend.dto.vehicle.VehicleDto;
 
 import java.util.List;
 
 public interface VehicleService {
 
-    Vehicle create(CreateVehicleRequest request);
+    List<VehicleDto> findAll();
 
-    List<Vehicle> findAll();
+    VehicleDto findById(Long vehicleId);
 
-    Vehicle findById(Long vehicleId);
+    VehicleDto create(CreateVehicleRequest request);
 
-    Vehicle update(
-            Long vehicleId,
-            UpdateVehicleRequest request);
+    VehicleDto update(Long vehicleId, UpdateVehicleRequest request);
 
     void delete(Long vehicleId);
 }
