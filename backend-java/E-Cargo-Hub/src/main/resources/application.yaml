@@ -1,12 +1,11 @@
 spring:
+  application:
+    name: E-Cargo-Hub
+
   security:
     user:
       name: admin
       password: admin123
-
-      
-  application:
-    name: E-Cargo-Hub
 
   datasource:
     url: jdbc:postgresql://localhost:5432/simulador_logistico
@@ -17,9 +16,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
-
     open-in-view: false
-
     properties:
       hibernate:
         format_sql: true
@@ -28,6 +25,21 @@ spring:
 
   jackson:
     time-zone: UTC
+
+  kafka:
+    bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS:localhost:8085}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.springframework.kafka.support.serializer.JsonSerializer
+      acks: all
+      retries: 3
+      properties:
+        enable.idempotence: true
+
+graphhopper:
+  api:
+    key: ${GRAPHHOPPER_API_KEY:f9da97c3-e894-406e-823b-086ecd55b497}
+    url: https://graphhopper.com/api/1
 
 server:
   port: 8081
