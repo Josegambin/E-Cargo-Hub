@@ -4,6 +4,8 @@ import com.ecargohub.backend.api.model.CreateVehicleRequest;
 import com.ecargohub.backend.api.model.UpdateVehicleRequest;
 import com.ecargohub.backend.api.model.Vehicle;
 import com.ecargohub.backend.entity.VehicleEntity;
+import com.ecargohub.backend.exception.VehicleNotFoundException;
+import com.ecargohub.backend.interfaces.VehicleService;
 import com.ecargohub.backend.mapper.VehicleMapper;
 import com.ecargohub.backend.repository.VehicleRepository;
 

@@ -4,7 +4,7 @@ import com.ecargohub.backend.api.VehiclesApi;
 import com.ecargohub.backend.api.model.CreateVehicleRequest;
 import com.ecargohub.backend.api.model.UpdateVehicleRequest;
 import com.ecargohub.backend.api.model.Vehicle;
-import com.ecargohub.backend.service.VehicleService;
+import com.ecargohub.backend.interfaces.VehicleService;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;

@@ -1,4 +1,4 @@
-package com.ecargohub.backend.service;
+package com.ecargohub.backend.interfaces;
 
 import com.ecargohub.backend.api.model.CreateVehicleRequest;
 import com.ecargohub.backend.api.model.UpdateVehicleRequest;

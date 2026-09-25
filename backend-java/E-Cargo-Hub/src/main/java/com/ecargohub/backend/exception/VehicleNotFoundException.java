@@ -1,4 +1,4 @@
-package com.ecargohub.backend.service;
+package com.ecargohub.backend.exception;
 
 public class VehicleNotFoundException extends RuntimeException {
 

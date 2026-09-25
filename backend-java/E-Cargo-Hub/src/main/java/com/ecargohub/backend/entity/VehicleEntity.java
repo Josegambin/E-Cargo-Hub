@@ -4,9 +4,17 @@ import com.ecargohub.backend.domain.VehicleStatus;
 import com.ecargohub.backend.domain.VehicleType;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 @Entity
 @Table(name = "vehicles")
+@Getter 
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor 
 public class VehicleEntity {
 
     @Id
@@ -27,60 +35,4 @@ public class VehicleEntity {
     @Column(nullable = false, length = 20)
     private VehicleStatus status;
 
-    public VehicleEntity() {
-    }
-
-    public VehicleEntity(
-            Long id,
-            String name,
-            VehicleType type,
-            Double maxSpeed,
-            VehicleStatus status) {
-
-        this.id = id;
-        this.name = name;
-        this.type = type;
-        this.maxSpeed = maxSpeed;
-        this.status = status;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public VehicleType getType() {
-        return type;
-    }
-
-    public void setType(VehicleType type) {
-        this.type = type;
-    }
-
-    public Double getMaxSpeed() {
-        return maxSpeed;
-    }
-
-    public void setMaxSpeed(Double maxSpeed) {
-        this.maxSpeed = maxSpeed;
-    }
-
-    public VehicleStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(VehicleStatus status) {
-        this.status = status;
-    }
 }
