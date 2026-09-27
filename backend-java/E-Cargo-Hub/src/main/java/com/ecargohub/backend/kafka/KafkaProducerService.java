@@ -16,11 +16,13 @@ public class KafkaProducerService {
 
     private static final String TOPIC_COMMANDS = "vehicle-commands";
 
-    private final KafkaTemplate<Object, Object> kafkaTemplate;
+    // 1. CAMBIA ESTA LÍNEA DE <Object, Object> A <String, Object>
+    private final KafkaTemplate<String, Object> kafkaTemplate;
 
-public KafkaProducerService(KafkaTemplate<Object, Object> kafkaTemplate) {
-    this.kafkaTemplate = kafkaTemplate;
-}
+    // 2. CAMBIA TAMBIÉN EL PARÁMETRO DEL CONSTRUCTOR
+    public KafkaProducerService(KafkaTemplate<String, Object> kafkaTemplate) {
+        this.kafkaTemplate = kafkaTemplate;
+    }
 
     /**
      * Publica un comando de vehículo en Kafka.
@@ -34,6 +36,7 @@ public KafkaProducerService(KafkaTemplate<Object, Object> kafkaTemplate) {
                 .setHeader("eventType", "VEHICLE_COMMAND")
                 .build();
 
+        // Al usar send(Message<?> message), Spring infiere los tipos del mensaje automáticamente
         kafkaTemplate.send(message)
                 .whenComplete((result, ex) -> {
                     if (ex != null) {
