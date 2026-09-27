@@ -3,7 +3,6 @@ package com.ecargohub.backend.entity;
 import com.ecargohub.backend.domain.enums.AlertSeverityEnum;
 import com.ecargohub.backend.domain.enums.AlertTypeEnum;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,7 +14,6 @@ import java.time.OffsetDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 public class VehicleAlertEntity {
 
     @Id

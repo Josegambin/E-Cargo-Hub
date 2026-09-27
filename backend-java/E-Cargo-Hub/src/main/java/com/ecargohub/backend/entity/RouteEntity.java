@@ -2,7 +2,6 @@ package com.ecargohub.backend.entity;
 
 import com.ecargohub.backend.domain.enums.RouteStatusEnum;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -12,7 +11,6 @@ import lombok.Setter;
 @Getter
 @Setter
 @NoArgsConstructor
-@AllArgsConstructor
 public class RouteEntity {
 
     @Id
