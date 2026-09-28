@@ -1,7 +1,9 @@
 package com.ecargohub.backend.service.geo;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.ecargohub.backend.dto.route.RouteResponseDto;
+
+import tools.jackson.databind.JsonNode;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;

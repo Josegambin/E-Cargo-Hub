@@ -5,6 +5,7 @@ import com.ecargohub.backend.dto.command.VehicleCommandRequest;
 import com.ecargohub.backend.entity.VehicleCommandEntity;
 import com.ecargohub.backend.entity.VehicleEntity;
 import com.ecargohub.backend.exception.ResourceNotFoundException;
+import com.ecargohub.backend.exception.VehicleAlreadyRunningException;
 import com.ecargohub.backend.interfaces.VehicleCommandService;
 import com.ecargohub.backend.kafka.KafkaProducerService;
 import com.ecargohub.backend.mapper.CommandMapper;
@@ -22,17 +23,25 @@ public class VehicleCommandServiceImpl implements VehicleCommandService {
     private final VehicleRepository vehicleRepository;
     private final CommandMapper commandMapper;
     private final KafkaProducerService kafkaProducerService;
+    private final SimulationRegistry simulationRegistry; // 👈 añadir al constructor
 
     public VehicleCommandServiceImpl(VehicleCommandRepository commandRepository, VehicleRepository vehicleRepository,
-            CommandMapper commandMapper, KafkaProducerService kafkaProducerService) {
+            CommandMapper commandMapper, KafkaProducerService kafkaProducerService,
+            SimulationRegistry simulationRegistry) {
         this.commandRepository = commandRepository;
         this.vehicleRepository = vehicleRepository;
         this.commandMapper = commandMapper;
         this.kafkaProducerService = kafkaProducerService;
+        this.simulationRegistry = simulationRegistry;
     }
 
     @Override
     public VehicleCommandDto sendCommand(Long vehicleId, VehicleCommandRequest request) {
+
+        if (simulationRegistry.isRunning(vehicleId)) {
+            throw new VehicleAlreadyRunningException(vehicleId);
+        }
+
         VehicleEntity vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found: " + vehicleId));
 

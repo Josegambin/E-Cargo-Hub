@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.OffsetDateTime;
+import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -35,5 +36,10 @@ public class GlobalExceptionHandler {
         ApiErrorDto body = ApiErrorDto.builder().timestamp(OffsetDateTime.now()).status(status.value()).error(error)
                 .message(message).path(req.getRequestURI()).build();
         return ResponseEntity.status(status).body(body);
+    }
+
+    @ExceptionHandler(VehicleAlreadyRunningException.class)
+    public ResponseEntity<ApiErrorDto> handleAlreadyRunning(VehicleAlreadyRunningException ex, HttpServletRequest req) {
+        return build(HttpStatus.CONFLICT, "CONFLICT", ex.getMessage(), req);
     }
 }
