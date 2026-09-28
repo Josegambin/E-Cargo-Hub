@@ -63,6 +63,7 @@ public class VehicleCommandServiceImpl implements VehicleCommandService {
                 throw new IllegalStateException("Vehicle " + vehicleId + " is not running");
             }
         }
+			default -> throw new IllegalArgumentException("Unexpected value: " + request.command());
         }
 
         // A partir de aquí: guardar en BBDD y publicar a Kafka

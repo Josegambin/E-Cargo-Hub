@@ -3,8 +3,6 @@ package com.ecargohub.backend.service;
 import com.ecargohub.backend.dto.status.VehicleStatusDto;
 import com.ecargohub.backend.entity.VehicleCurrentStatusEntity;
 import com.ecargohub.backend.repository.VehicleCurrentStatusRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,8 +12,6 @@ import java.util.Optional;
 
 @Service
 public class VehicleStatusService {
-
-    private static final Logger log = LoggerFactory.getLogger(VehicleStatusService.class);
 
     private final VehicleCurrentStatusRepository repository;
 
