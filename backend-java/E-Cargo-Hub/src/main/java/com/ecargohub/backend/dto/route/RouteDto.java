@@ -6,13 +6,6 @@ import com.ecargohub.backend.dto.geo.GeoPointDto;
 import lombok.Builder;
 
 @Builder
-public record RouteDto(
-        Long id,
-        String name,
-        GeoPointDto origin,
-        GeoPointDto destination,
-        Double distanceMeters,
-        Long durationSeconds,
-        RouteStatusEnum status,
-        GeoLineStringDto geometry
-) {}
+public record RouteDto(Long id, String name, GeoPointDto origin, GeoPointDto destination, Double distanceMeters,
+        Long durationSeconds, RouteStatusEnum status, GeoLineStringDto geometry) {
+}

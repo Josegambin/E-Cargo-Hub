@@ -20,11 +20,10 @@ public class VehiclePositionServiceImpl implements VehiclePositionService {
     private final VehiclePositionRepository positionRepository;
     private final VehicleRepository vehicleRepository;
     private final PositionMapper positionMapper;
-    private final SimulationEventPublisher eventPublisher;   // ← CAMPO
+    private final SimulationEventPublisher eventPublisher; // ← CAMPO
 
-    public VehiclePositionServiceImpl(VehiclePositionRepository positionRepository,
-                                      VehicleRepository vehicleRepository,
-                                      PositionMapper positionMapper) {
+    public VehiclePositionServiceImpl(VehiclePositionRepository positionRepository, VehicleRepository vehicleRepository,
+            PositionMapper positionMapper) {
         this.positionRepository = positionRepository;
         this.vehicleRepository = vehicleRepository;
         this.positionMapper = positionMapper;
@@ -34,17 +33,14 @@ public class VehiclePositionServiceImpl implements VehiclePositionService {
     @Override
     @Transactional(readOnly = true)
     public VehiclePositionDto findCurrentPosition(Long vehicleId) {
-        return positionRepository.findTopByVehicleIdOrderByTimestampDesc(vehicleId)
-                .map(positionMapper::toDto)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Position not found for vehicle: " + vehicleId));
+        return positionRepository.findTopByVehicleIdOrderByTimestampDesc(vehicleId).map(positionMapper::toDto)
+                .orElseThrow(() -> new ResourceNotFoundException("Position not found for vehicle: " + vehicleId));
     }
 
     @Override
     public VehiclePositionDto save(Long vehicleId, VehiclePositionDto position) {
         VehicleEntity vehicle = vehicleRepository.findById(vehicleId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Vehicle not found: " + vehicleId));
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found: " + vehicleId));
 
         VehiclePositionEntity entity = new VehiclePositionEntity();
         entity.setVehicle(vehicle);
@@ -54,11 +50,9 @@ public class VehiclePositionServiceImpl implements VehiclePositionService {
         entity.setSpeedLimit(position.speedLimit());
         entity.setAcceleration(position.acceleration());
         entity.setHeading(position.heading());
-        entity.setTimestamp(position.timestamp() != null
-                ? position.timestamp()
-                : OffsetDateTime.now());
+        entity.setTimestamp(position.timestamp() != null ? position.timestamp() : OffsetDateTime.now());
 
-         VehiclePositionDto saved = positionMapper.toDto(positionRepository.save(entity));
+        VehiclePositionDto saved = positionMapper.toDto(positionRepository.save(entity));
 
         // Emitir por WebSocket
         eventPublisher.publishPosition(vehicleId, saved);

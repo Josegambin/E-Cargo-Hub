@@ -20,8 +20,7 @@ public class WarehouseServiceImpl implements WarehouseService {
     private final WarehouseRepository warehouseRepository;
     private final WarehouseMapper warehouseMapper;
 
-    public WarehouseServiceImpl(WarehouseRepository warehouseRepository,
-                                WarehouseMapper warehouseMapper) {
+    public WarehouseServiceImpl(WarehouseRepository warehouseRepository, WarehouseMapper warehouseMapper) {
         this.warehouseRepository = warehouseRepository;
         this.warehouseMapper = warehouseMapper;
     }
@@ -29,18 +28,14 @@ public class WarehouseServiceImpl implements WarehouseService {
     @Override
     @Transactional(readOnly = true)
     public List<WarehouseDto> findAll() {
-        return warehouseRepository.findAll().stream()
-                .map(warehouseMapper::toDto)
-                .toList();
+        return warehouseRepository.findAll().stream().map(warehouseMapper::toDto).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public WarehouseDto findById(Long warehouseId) {
-        return warehouseRepository.findById(warehouseId)
-                .map(warehouseMapper::toDto)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Warehouse not found: " + warehouseId));
+        return warehouseRepository.findById(warehouseId).map(warehouseMapper::toDto)
+                .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found: " + warehouseId));
     }
 
     @Override
@@ -52,8 +47,7 @@ public class WarehouseServiceImpl implements WarehouseService {
     @Override
     public WarehouseDto update(Long warehouseId, UpdateWarehouseRequest request) {
         WarehouseEntity entity = warehouseRepository.findById(warehouseId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Warehouse not found: " + warehouseId));
+                .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found: " + warehouseId));
         warehouseMapper.updateEntity(entity, request);
         return warehouseMapper.toDto(warehouseRepository.save(entity));
     }

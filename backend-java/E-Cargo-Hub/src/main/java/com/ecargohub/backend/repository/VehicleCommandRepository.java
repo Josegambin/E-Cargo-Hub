@@ -3,12 +3,16 @@ package com.ecargohub.backend.repository;
 import com.ecargohub.backend.entity.VehicleCommandEntity;
 
 import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
 public interface VehicleCommandRepository extends JpaRepository<VehicleCommandEntity, Long> {
-        List<VehicleCommandEntity> findByVehicleIdOrderByCreatedAtDesc(Long vehicleId);
+    List<VehicleCommandEntity> findByVehicleIdOrderByCreatedAtDesc(Long vehicleId);
+
+    Optional<VehicleCommandEntity> findByCommandId(UUID commandId);
 
 }

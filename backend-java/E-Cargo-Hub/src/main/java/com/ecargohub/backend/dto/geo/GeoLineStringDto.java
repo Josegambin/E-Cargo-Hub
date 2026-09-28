@@ -9,10 +9,7 @@ import java.util.List;
 @Builder
 public record GeoLineStringDto(
 
-        @NotNull
-        String type,
+        @NotNull String type,
 
-        @NotNull
-        @Size(min = 2)
-        List<List<Double>> coordinates
-) {}
+        @NotNull @Size(min = 2) List<List<Double>> coordinates) {
+}

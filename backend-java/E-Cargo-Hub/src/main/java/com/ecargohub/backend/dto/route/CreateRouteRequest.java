@@ -8,15 +8,9 @@ import lombok.Builder;
 @Builder
 public record CreateRouteRequest(
 
-        @NotBlank
-        @Size(min = 1, max = 150)
-        String name,
+        @NotBlank @Size(min = 1, max = 150) String name,
 
-        @NotNull
-        @Valid
-        GeoPointDto origin,
+        @NotNull @Valid GeoPointDto origin,
 
-        @NotNull
-        @Valid
-        GeoPointDto destination
-) {}
+        @NotNull @Valid GeoPointDto destination) {
+}

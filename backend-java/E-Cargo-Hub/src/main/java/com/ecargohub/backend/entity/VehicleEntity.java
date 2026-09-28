@@ -10,10 +10,10 @@ import lombok.Setter;
 
 @Entity
 @Table(name = "vehicles")
-@Getter 
+@Getter
 @Setter
 @NoArgsConstructor
- 
+
 public class VehicleEntity {
 
     @Id

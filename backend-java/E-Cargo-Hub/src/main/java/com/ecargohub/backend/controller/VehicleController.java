@@ -37,8 +37,7 @@ public class VehicleController {
     }
 
     @PutMapping("/{vehicleId}")
-    public VehicleDto update(@PathVariable Long vehicleId,
-                             @Valid @RequestBody UpdateVehicleRequest request) {
+    public VehicleDto update(@PathVariable Long vehicleId, @Valid @RequestBody UpdateVehicleRequest request) {
         return vehicleService.update(vehicleId, request);
     }
 

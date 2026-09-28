@@ -58,7 +58,17 @@ services:
       KAFKA_CLUSTERS_0_NAME: simulador
       # Corregido: Conecta de forma interna al container_name usando el puerto secundario dedicado
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: simulador-kafka:9094
+  
+  simulador-redis:
+    image: redis:7-alpine
+    container_name: simulador-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis-data:/data
 
 volumes:
   postgres_data:
   kafka_data:
+  redis-data:

@@ -11,8 +11,10 @@ import org.mapstruct.ReportingPolicy;
 public interface GeoMapper {
 
     GeoPointDto toDto(GeoPointEmbeddable entity);
+
     GeoPointEmbeddable toEntity(GeoPointDto dto);
 
     GeoLineStringDto toDto(GeoLineStringEmbeddable entity);
+
     GeoLineStringEmbeddable toEntity(GeoLineStringDto dto);
 }

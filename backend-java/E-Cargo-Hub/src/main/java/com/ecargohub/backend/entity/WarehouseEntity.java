@@ -25,8 +25,7 @@ public class WarehouseEntity {
 
     @Embedded
     @AttributeOverrides({
-            @AttributeOverride(name = "latitude",  column = @Column(name = "location_lat", nullable = false)),
-            @AttributeOverride(name = "longitude", column = @Column(name = "location_lon", nullable = false))
-    })
+            @AttributeOverride(name = "latitude", column = @Column(name = "location_lat", nullable = false)),
+            @AttributeOverride(name = "longitude", column = @Column(name = "location_lon", nullable = false)) })
     private GeoPointEmbeddable location;
 }

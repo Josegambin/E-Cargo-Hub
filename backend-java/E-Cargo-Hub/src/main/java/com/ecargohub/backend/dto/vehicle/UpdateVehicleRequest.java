@@ -7,14 +7,9 @@ import lombok.Builder;
 @Builder
 public record UpdateVehicleRequest(
 
-        @NotBlank
-        @Size(min = 1, max = 100)
-        String name,
+        @NotBlank @Size(min = 1, max = 100) String name,
 
-        @NotNull
-        VehicleType type,
+        @NotNull VehicleType type,
 
-        @NotNull
-        @DecimalMin("0.0")
-        Double maxSpeed
-) {}
+        @NotNull @DecimalMin("0.0") Double maxSpeed) {
+}

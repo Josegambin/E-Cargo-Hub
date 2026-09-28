@@ -7,14 +7,6 @@ import lombok.Builder;
 import java.time.OffsetDateTime;
 
 @Builder
-public record VehicleAlertDto(
-        Long id,
-        Long vehicleId,
-        Long simulationId,
-        AlertTypeEnum type,
-        AlertSeverityEnum severity,
-        String message,
-        Double currentSpeed,
-        Double speedLimit,
-        OffsetDateTime timestamp
-) {}
+public record VehicleAlertDto(Long id, Long vehicleId, Long simulationId, AlertTypeEnum type,
+        AlertSeverityEnum severity, String message, Double currentSpeed, Double speedLimit, OffsetDateTime timestamp) {
+}

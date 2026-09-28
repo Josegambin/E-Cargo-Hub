@@ -7,10 +7,7 @@ import com.ecargohub.backend.entity.SimulationEntity;
 import com.ecargohub.backend.entity.VehicleEntity;
 import org.mapstruct.*;
 
-@Mapper(
-        componentModel = "spring",
-        unmappedTargetPolicy = ReportingPolicy.IGNORE
-)
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface SimulationMapper {
 
     @Mapping(source = "vehicle.id", target = "vehicleId")
@@ -23,13 +20,10 @@ public interface SimulationMapper {
     @Mapping(target = "finishedAt", ignore = true)
     @Mapping(target = "vehicle", source = "vehicle")
     @Mapping(target = "route", source = "route")
-    
+
     // ✅ CORRECCIÓN: Rompe la ambigüedad indicando que el 'name' proviene de la request
     @Mapping(target = "name", source = "request.name")
-    
-    @Mapping(target = "simulationSpeed",
-             expression = "java(request.simulationSpeed() != null ? request.simulationSpeed() : 1.0)")
-    SimulationEntity toEntity(CreateSimulationRequest request,
-                              VehicleEntity vehicle,
-                              RouteEntity route);
+
+    @Mapping(target = "simulationSpeed", expression = "java(request.simulationSpeed() != null ? request.simulationSpeed() : 1.0)")
+    SimulationEntity toEntity(CreateSimulationRequest request, VehicleEntity vehicle, RouteEntity route);
 }

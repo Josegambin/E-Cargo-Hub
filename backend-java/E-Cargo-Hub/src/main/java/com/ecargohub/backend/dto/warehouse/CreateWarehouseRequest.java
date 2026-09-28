@@ -8,14 +8,9 @@ import lombok.Builder;
 @Builder
 public record CreateWarehouseRequest(
 
-        @NotBlank
-        @Size(min = 1, max = 150)
-        String name,
+        @NotBlank @Size(min = 1, max = 150) String name,
 
-        @Size(max = 250)
-        String address,
+        @Size(max = 250) String address,
 
-        @NotNull
-        @Valid
-        GeoPointDto location
-) {}
+        @NotNull @Valid GeoPointDto location) {
+}

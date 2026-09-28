@@ -21,28 +21,28 @@ public class KafkaProducerService {
     }
 
     /**
-     * Publica un comando de vehículo en Kafka de forma asíncrona ("fire and forget").
-     * El hilo HTTP no se bloquea y retorna inmediatamente a Postman.
+     * Publica un comando de vehículo en Kafka de forma asíncrona ("fire and forget"). El hilo HTTP no se bloquea y
+     * retorna inmediatamente a Postman.
      */
     public void sendVehicleCommand(VehicleCommandDto command) {
         log.info("Despachando comando asíncrono a Kafka para vehículo: {}", command.vehicleId());
 
-        Message<VehicleCommandDto> message = MessageBuilder
-                .withPayload(command)
+        Message<VehicleCommandDto> message = MessageBuilder.withPayload(command)
                 .setHeader(KafkaHeaders.TOPIC, TOPIC_COMMANDS)
                 .setHeader(KafkaHeaders.KEY, String.valueOf(command.vehicleId()))
-                .setHeader("eventType", "VEHICLE_COMMAND")
-                .build();
+                .setHeader("eventType", "VEHICLE_COMMAND").build();
 
         // Ejecución asíncrona nativa sin llamadas bloqueantes (.get())
         kafkaTemplate.send(message).whenComplete((result, ex) -> {
             if (ex != null) {
-                log.error("❌ Kafka en segundo plano reportó error (Revisa los listeners en el puerto 8085): {}", ex.getMessage());
+                log.error("❌ Kafka en segundo plano reportó error (Revisa los listeners en el puerto 8085): {}",
+                        ex.getMessage());
             } else {
-                log.info("✅ Mensaje confirmado por Kafka en segundo plano: offset={}", result.getRecordMetadata().offset());
+                log.info("✅ Mensaje confirmado por Kafka en segundo plano: offset={}",
+                        result.getRecordMetadata().offset());
             }
         });
-        
+
         log.info("Hilo HTTP liberado con éxito. Postman ya puede recibir el 200 OK.");
     }
 }

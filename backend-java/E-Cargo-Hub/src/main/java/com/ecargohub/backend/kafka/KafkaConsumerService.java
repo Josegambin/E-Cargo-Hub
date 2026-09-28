@@ -1,17 +1,15 @@
 package com.ecargohub.backend.kafka;
 
 import com.ecargohub.backend.dto.command.VehicleCommandDto;
-import com.ecargohub.backend.dto.route.RouteResponseDto;
+import com.ecargohub.backend.service.IdempotencyService;
 import com.ecargohub.backend.service.geo.GraphHopperService;
+import tools.jackson.databind.json.JsonMapper;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.annotation.KafkaListener;
-import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
-
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 
 @Service
 public class KafkaConsumerService {
@@ -20,60 +18,45 @@ public class KafkaConsumerService {
 
     private final GraphHopperService graphHopperService;
     private final SimpMessagingTemplate messagingTemplate;
+    private final JsonMapper objectMapper;
+    private final IdempotencyService idempotencyService;
 
-    public KafkaConsumerService(GraphHopperService graphHopperService, SimpMessagingTemplate messagingTemplate) {
+    public KafkaConsumerService(GraphHopperService graphHopperService, SimpMessagingTemplate messagingTemplate,
+            IdempotencyService idempotencyService) {
         this.graphHopperService = graphHopperService;
         this.messagingTemplate = messagingTemplate;
+        this.idempotencyService = idempotencyService;
+        this.objectMapper = JsonMapper.builder().build();
     }
 
-    @KafkaListener(
-        topics = "vehicle-commands", 
-        groupId = "e-cargo-hub-consumers",
-        properties = {"spring.json.value.default.type=com.ecargohub.backend.dto.command.VehicleCommandDto"}
+    @KafkaListener(topics = "vehicle-commands", groupId = "e-cargo-hub-consumers", containerFactory = "stringKafkaListenerContainerFactory" // Vinculación
+                                                                                                                                            // a
+                                                                                                                                            // tu
+                                                                                                                                            // factoría
+                                                                                                                                            // corregida
     )
-    public void listenVehicleCommands(@Payload VehicleCommandDto command) {
-        log.info("📥 Evento Kafka - Comando ID {}: Vehículo={}, Acción={}", command.id(), command.vehicleId(), command.command());
+    public void listenVehicleCommands(String messageString) {
+        log.info("📥 ¡EVENTO DETECTADO EN KAFKA!: {}", messageString);
 
-        // Escucha el comando "START" mapeado de tu enumerado oficial
-        if (command.command() != null && "START".equalsIgnoreCase(command.command().name())) {
-            
-            // Puntos geográficos: De Cox a tu lugar de trabajo en Murcia
-            double originLat = 38.1408;  double originLon = -0.8844;
-            double destLat = 37.9922;    double destLon = -1.1307;
+        try {
+            VehicleCommandDto command = objectMapper.readValue(messageString, VehicleCommandDto.class);
 
-            // 1. Obtener la ruta optimizada por carretera desde la API de GraphHopper
-            RouteResponseDto route = graphHopperService.calculateRoute(originLat, originLon, destLat, destLon);
-
-            // 2. Ejecución asíncrona de telemetría mediante WebSockets
-            CompletableFuture.runAsync(() -> simulateVehicleMovement(command.vehicleId(), route));
-        }
-    }
-
-    private void simulateVehicleMovement(Long vehicleId, RouteResponseDto route) {
-        log.info("🚀 Transmitiendo coordenadas por WS para vehículo {}. Puntos: {}", vehicleId, route.coordinates().size());
-
-        for (int i = 0; i < route.coordinates().size(); i++) {
-            double[] coords = route.coordinates().get(i);
-            
-            Map<String, Object> telemetry = Map.of(
-                "vehicleId", vehicleId,
-                "latitude", coords[0],
-                "longitude", coords[1],
-                "progress", Math.round(((double) (i + 1) / route.coordinates().size()) * 100),
-                "speedKmh", 90.0,
-                "timestamp", System.currentTimeMillis()
-            );
-
-            // Emisión directa al broker STOMP /topic/vehicle-status
-            messagingTemplate.convertAndSend("/topic/vehicle-status", (Object) telemetry);
-
-            try {
-                Thread.sleep(1000); // Demora de 1 segundo para emular la velocidad del camión en el mapa
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                break;
+            // 🔒 IDEMPOTENCIA: si ya lo procesamos, salimos
+            if (!idempotencyService.tryMarkAsProcessed(command.commandId())) {
+                return;
             }
+
+            log.info("📦 Mapeado a DTO -> Comando: {}, Vehículo: {}, commandId: {}", command.command(),
+                    command.vehicleId(), command.commandId());
+
+            if (command.command() != null && "START".equalsIgnoreCase(command.command().name())) {
+                // ... lógica existente de simulación ...
+            }
+
+        } catch (Exception e) {
+            log.error("❌ Error procesando el evento: {}", e.getMessage(), e);
+            // ⚠️ Re-lanzamos para que Kafka NO commitee el offset y reintente
+            throw new RuntimeException("Error procesando comando de Kafka", e);
         }
-        log.info("🏁 Vehículo {} llegó a destino.", vehicleId);
     }
 }

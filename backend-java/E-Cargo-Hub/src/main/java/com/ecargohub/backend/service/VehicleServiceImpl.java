@@ -21,8 +21,7 @@ public class VehicleServiceImpl implements VehicleService {
     private final VehicleRepository vehicleRepository;
     private final VehicleMapper vehicleMapper;
 
-    public VehicleServiceImpl(VehicleRepository vehicleRepository,
-                              VehicleMapper vehicleMapper) {
+    public VehicleServiceImpl(VehicleRepository vehicleRepository, VehicleMapper vehicleMapper) {
         this.vehicleRepository = vehicleRepository;
         this.vehicleMapper = vehicleMapper;
     }
@@ -30,18 +29,14 @@ public class VehicleServiceImpl implements VehicleService {
     @Override
     @Transactional(readOnly = true)
     public List<VehicleDto> findAll() {
-        return vehicleRepository.findAll().stream()
-                .map(vehicleMapper::toDto)
-                .toList();
+        return vehicleRepository.findAll().stream().map(vehicleMapper::toDto).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public VehicleDto findById(Long vehicleId) {
-        return vehicleRepository.findById(vehicleId)
-                .map(vehicleMapper::toDto)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Vehicle not found: " + vehicleId));
+        return vehicleRepository.findById(vehicleId).map(vehicleMapper::toDto)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found: " + vehicleId));
     }
 
     @Override
@@ -54,8 +49,7 @@ public class VehicleServiceImpl implements VehicleService {
     @Override
     public VehicleDto update(Long vehicleId, UpdateVehicleRequest request) {
         VehicleEntity entity = vehicleRepository.findById(vehicleId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Vehicle not found: " + vehicleId));
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found: " + vehicleId));
         vehicleMapper.updateEntity(entity, request);
         return vehicleMapper.toDto(vehicleRepository.save(entity));
     }

@@ -23,13 +23,10 @@ public class AlertServiceImpl implements AlertService {
     private final VehicleRepository vehicleRepository;
     private final SimulationRepository simulationRepository;
     private final AlertMapper alertMapper;
-    private final SimulationEventPublisher eventPublisher;   // ← CAMPO
+    private final SimulationEventPublisher eventPublisher; // ← CAMPO
 
-
-    public AlertServiceImpl(VehicleAlertRepository alertRepository,
-                            VehicleRepository vehicleRepository,
-                            SimulationRepository simulationRepository,
-                            AlertMapper alertMapper) {
+    public AlertServiceImpl(VehicleAlertRepository alertRepository, VehicleRepository vehicleRepository,
+            SimulationRepository simulationRepository, AlertMapper alertMapper) {
         this.alertRepository = alertRepository;
         this.vehicleRepository = vehicleRepository;
         this.simulationRepository = simulationRepository;
@@ -39,13 +36,11 @@ public class AlertServiceImpl implements AlertService {
 
     @Override
     @Transactional(readOnly = true)
-    public List<VehicleAlertDto> findAlerts(Long vehicleId, Long simulationId,
-                                            AlertSeverityEnum severity) {
+    public List<VehicleAlertDto> findAlerts(Long vehicleId, Long simulationId, AlertSeverityEnum severity) {
         List<VehicleAlertEntity> result;
 
         if (vehicleId != null && simulationId != null && severity != null) {
-            result = alertRepository.findByVehicleIdAndSimulationIdAndSeverity(
-                    vehicleId, simulationId, severity);
+            result = alertRepository.findByVehicleIdAndSimulationIdAndSeverity(vehicleId, simulationId, severity);
         } else if (vehicleId != null) {
             result = alertRepository.findByVehicleId(vehicleId);
         } else if (simulationId != null) {
@@ -64,13 +59,11 @@ public class AlertServiceImpl implements AlertService {
         VehicleAlertEntity entity = new VehicleAlertEntity();
 
         entity.setVehicle(vehicleRepository.findById(alert.vehicleId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Vehicle not found: " + alert.vehicleId())));
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found: " + alert.vehicleId())));
 
         if (alert.simulationId() != null) {
             entity.setSimulation(simulationRepository.findById(alert.simulationId())
-                    .orElseThrow(() -> new ResourceNotFoundException(
-                            "Simulation not found: " + alert.simulationId())));
+                    .orElseThrow(() -> new ResourceNotFoundException("Simulation not found: " + alert.simulationId())));
         }
 
         entity.setType(alert.type());
@@ -80,7 +73,7 @@ public class AlertServiceImpl implements AlertService {
         entity.setSpeedLimit(alert.speedLimit());
         entity.setTimestamp(alert.timestamp());
 
-         VehicleAlertDto saved = alertMapper.toDto(alertRepository.save(entity));
+        VehicleAlertDto saved = alertMapper.toDto(alertRepository.save(entity));
 
         // Emitir por WebSocket
         eventPublisher.publishAlert(saved);

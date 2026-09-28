@@ -27,13 +27,10 @@ public class SimulationServiceImpl implements SimulationService {
     private final VehicleRepository vehicleRepository;
     private final RouteRepository routeRepository;
     private final SimulationMapper simulationMapper;
-        private final SimulationEventPublisher eventPublisher;
+    private final SimulationEventPublisher eventPublisher;
 
-
-    public SimulationServiceImpl(SimulationRepository simulationRepository,
-                                 VehicleRepository vehicleRepository,
-                                 RouteRepository routeRepository,
-                                 SimulationMapper simulationMapper) {
+    public SimulationServiceImpl(SimulationRepository simulationRepository, VehicleRepository vehicleRepository,
+            RouteRepository routeRepository, SimulationMapper simulationMapper) {
         this.simulationRepository = simulationRepository;
         this.vehicleRepository = vehicleRepository;
         this.routeRepository = routeRepository;
@@ -44,45 +41,39 @@ public class SimulationServiceImpl implements SimulationService {
     @Override
     @Transactional(readOnly = true)
     public List<SimulationDto> findAll() {
-        return simulationRepository.findAll().stream()
-                .map(simulationMapper::toDto)
-                .toList();
+        return simulationRepository.findAll().stream().map(simulationMapper::toDto).toList();
     }
 
     @Override
     @Transactional(readOnly = true)
     public SimulationDto findById(Long simulationId) {
-        return simulationRepository.findById(simulationId)
-                .map(simulationMapper::toDto)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Simulation not found: " + simulationId));
+        return simulationRepository.findById(simulationId).map(simulationMapper::toDto)
+                .orElseThrow(() -> new ResourceNotFoundException("Simulation not found: " + simulationId));
     }
 
     @Override
     public SimulationDto create(CreateSimulationRequest request) {
         VehicleEntity vehicle = vehicleRepository.findById(request.vehicleId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Vehicle not found: " + request.vehicleId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found: " + request.vehicleId()));
         RouteEntity route = routeRepository.findById(request.routeId())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Route not found: " + request.routeId()));
+                .orElseThrow(() -> new ResourceNotFoundException("Route not found: " + request.routeId()));
 
         SimulationEntity entity = simulationMapper.toEntity(request, vehicle, route);
         return simulationMapper.toDto(simulationRepository.save(entity));
     }
 
     @Override
-public SimulationDto start(Long simulationId) {
-    SimulationEntity entity = getSimulation(simulationId);
-    entity.setStatus(SimulationStatusEnum.RUNNING);
-    entity.setStartedAt(OffsetDateTime.now());
-    SimulationDto dto = simulationMapper.toDto(simulationRepository.save(entity));
+    public SimulationDto start(Long simulationId) {
+        SimulationEntity entity = getSimulation(simulationId);
+        entity.setStatus(SimulationStatusEnum.RUNNING);
+        entity.setStartedAt(OffsetDateTime.now());
+        SimulationDto dto = simulationMapper.toDto(simulationRepository.save(entity));
 
-    // Emitir por WebSocket
-    eventPublisher.publishSimulationStatus(simulationId, dto);
+        // Emitir por WebSocket
+        eventPublisher.publishSimulationStatus(simulationId, dto);
 
-    return dto;
-}
+        return dto;
+    }
 
     @Override
     public SimulationDto pause(Long simulationId) {
@@ -108,7 +99,6 @@ public SimulationDto start(Long simulationId) {
 
     private SimulationEntity getSimulation(Long simulationId) {
         return simulationRepository.findById(simulationId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Simulation not found: " + simulationId));
+                .orElseThrow(() -> new ResourceNotFoundException("Simulation not found: " + simulationId));
     }
 }

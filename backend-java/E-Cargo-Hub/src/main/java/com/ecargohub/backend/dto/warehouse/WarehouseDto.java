@@ -4,9 +4,5 @@ import com.ecargohub.backend.dto.geo.GeoPointDto;
 import lombok.Builder;
 
 @Builder
-public record WarehouseDto(
-        Long id,
-        String name,
-        String address,
-        GeoPointDto location
-) {}
+public record WarehouseDto(Long id, String name, String address, GeoPointDto location) {
+}

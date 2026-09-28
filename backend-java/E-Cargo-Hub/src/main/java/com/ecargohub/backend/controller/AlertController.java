@@ -18,8 +18,7 @@ public class AlertController {
     }
 
     @GetMapping
-    public List<VehicleAlertDto> getAlerts(
-            @RequestParam(required = false) Long vehicleId,
+    public List<VehicleAlertDto> getAlerts(@RequestParam(required = false) Long vehicleId,
             @RequestParam(required = false) Long simulationId,
             @RequestParam(required = false) AlertSeverityEnum severity) {
         return alertService.findAlerts(vehicleId, simulationId, severity);

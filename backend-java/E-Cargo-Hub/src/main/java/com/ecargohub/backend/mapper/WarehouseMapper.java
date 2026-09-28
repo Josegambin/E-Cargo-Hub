@@ -6,11 +6,7 @@ import com.ecargohub.backend.dto.warehouse.WarehouseDto;
 import com.ecargohub.backend.entity.WarehouseEntity;
 import org.mapstruct.*;
 
-@Mapper(
-        componentModel = "spring",
-        unmappedTargetPolicy = ReportingPolicy.IGNORE,
-        uses = { GeoMapper.class }
-)
+@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE, uses = { GeoMapper.class })
 public interface WarehouseMapper {
 
     WarehouseDto toDto(WarehouseEntity entity);

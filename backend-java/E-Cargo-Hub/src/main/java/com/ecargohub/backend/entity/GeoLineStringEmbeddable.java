@@ -1,11 +1,11 @@
 package com.ecargohub.backend.entity;
 
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 import java.util.List;
 
@@ -23,8 +23,7 @@ public class GeoLineStringEmbeddable {
     private List<List<Double>> coordinates;
 
     @Converter
-    public static class CoordinatesConverter
-            implements AttributeConverter<List<List<Double>>, String> {
+    public static class CoordinatesConverter implements AttributeConverter<List<List<Double>>, String> {
 
         private static final ObjectMapper MAPPER = new ObjectMapper();
 
@@ -40,9 +39,8 @@ public class GeoLineStringEmbeddable {
         @Override
         public List<List<Double>> convertToEntityAttribute(String dbData) {
             try {
-                return dbData == null
-                        ? null
-                        : MAPPER.readValue(dbData, new TypeReference<>() {});
+                return dbData == null ? null : MAPPER.readValue(dbData, new TypeReference<>() {
+                });
             } catch (Exception e) {
                 throw new IllegalStateException("Error deserializando coordinates", e);
             }

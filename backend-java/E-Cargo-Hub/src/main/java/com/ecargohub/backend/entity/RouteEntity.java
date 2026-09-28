@@ -22,16 +22,13 @@ public class RouteEntity {
 
     @Embedded
     @AttributeOverrides({
-            @AttributeOverride(name = "latitude",  column = @Column(name = "origin_lat", nullable = false)),
-            @AttributeOverride(name = "longitude", column = @Column(name = "origin_lon", nullable = false))
-    })
+            @AttributeOverride(name = "latitude", column = @Column(name = "origin_lat", nullable = false)),
+            @AttributeOverride(name = "longitude", column = @Column(name = "origin_lon", nullable = false)) })
     private GeoPointEmbeddable origin;
 
     @Embedded
-    @AttributeOverrides({
-            @AttributeOverride(name = "latitude",  column = @Column(name = "dest_lat", nullable = false)),
-            @AttributeOverride(name = "longitude", column = @Column(name = "dest_lon", nullable = false))
-    })
+    @AttributeOverrides({ @AttributeOverride(name = "latitude", column = @Column(name = "dest_lat", nullable = false)),
+            @AttributeOverride(name = "longitude", column = @Column(name = "dest_lon", nullable = false)) })
     private GeoPointEmbeddable destination;
 
     @Column(name = "distance_meters", nullable = false)
