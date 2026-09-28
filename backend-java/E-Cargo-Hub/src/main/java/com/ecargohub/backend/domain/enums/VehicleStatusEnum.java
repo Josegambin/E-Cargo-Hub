@@ -1,5 +1,5 @@
 package com.ecargohub.backend.domain.enums;
 
 public enum VehicleStatusEnum {
-    IDLE, RUNNING, PAUSED, STOPPED, ERROR
+    IDLE, EN_RUTA, PAUSADO, COMPLETADO, STOPPED
 }

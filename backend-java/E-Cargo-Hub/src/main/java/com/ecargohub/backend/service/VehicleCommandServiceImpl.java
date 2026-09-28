@@ -37,25 +37,44 @@ public class VehicleCommandServiceImpl implements VehicleCommandService {
 
     @Override
     public VehicleCommandDto sendCommand(Long vehicleId, VehicleCommandRequest request) {
-
-        if (simulationRegistry.isRunning(vehicleId)) {
-            throw new VehicleAlreadyRunningException(vehicleId);
-        }
-
         VehicleEntity vehicle = vehicleRepository.findById(vehicleId)
                 .orElseThrow(() -> new ResourceNotFoundException("Vehicle not found: " + vehicleId));
 
+        // 🔒 VALIDACIÓN POR TIPO DE COMANDO
+        switch (request.command()) {
+        case START -> {
+            if (simulationRegistry.isRunning(vehicleId)) {
+                throw new VehicleAlreadyRunningException(vehicleId);
+            }
+        }
+        case PAUSE -> {
+            if (!simulationRegistry.isRunning(vehicleId)) {
+                throw new IllegalStateException("Vehicle " + vehicleId + " is not running");
+            }
+        }
+        case RESUME -> {
+            SimulationRegistry.SimulationHandle h = simulationRegistry.get(vehicleId);
+            if (h == null || !h.isPaused()) {
+                throw new IllegalStateException("Vehicle " + vehicleId + " is not paused");
+            }
+        }
+        case STOP -> {
+            if (!simulationRegistry.isRunning(vehicleId)) {
+                throw new IllegalStateException("Vehicle " + vehicleId + " is not running");
+            }
+        }
+        }
+
+        // A partir de aquí: guardar en BBDD y publicar a Kafka
         VehicleCommandEntity entity = new VehicleCommandEntity();
         entity.setVehicle(vehicle);
         entity.setCommand(request.command());
         entity.setValue(request.value());
         entity.setCreatedAt(OffsetDateTime.now());
 
-        // save() abre y commitea su propia transacción
         VehicleCommandEntity saved = commandRepository.save(entity);
         VehicleCommandDto dto = commandMapper.toDto(saved);
 
-        // Kafka se publica DESPUÉS del commit de BBDD
         kafkaProducerService.sendVehicleCommand(dto);
 
         return dto;
