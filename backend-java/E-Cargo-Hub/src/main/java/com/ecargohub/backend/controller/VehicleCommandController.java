@@ -12,7 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/v1/vehicle-commands")
+@RequestMapping("/api/vehicle-commands")
 public class VehicleCommandController {
 
     private final VehicleCommandService vehicleCommandService;

@@ -8,6 +8,7 @@ import com.ecargohub.backend.service.IdempotencyService;
 import com.ecargohub.backend.service.SimulationRegistry;
 import com.ecargohub.backend.service.SimulationRegistry.SimulationHandle;
 import com.ecargohub.backend.service.VehicleStatusService;
+import com.ecargohub.backend.service.VehicleTelemetryService;
 import com.ecargohub.backend.service.geo.GraphHopperService;
 import tools.jackson.databind.json.JsonMapper;
 
@@ -50,10 +51,11 @@ public class KafkaConsumerService {
     private final ExecutorService simulationExecutor;
     private final SimulationRegistry simulationRegistry; // 👈 añadir al constructor
     private final VehicleStatusService vehicleStatusService;
+    private final VehicleTelemetryService vehicleTelemetryService;
 
     public KafkaConsumerService(GraphHopperService graphHopperService, SimpMessagingTemplate messagingTemplate,
             IdempotencyService idempotencyService, SimulationRegistry simulationRegistry,
-            VehicleStatusService vehicleStatusService) {
+            VehicleStatusService vehicleStatusService, VehicleTelemetryService vehicleTelemetryService) {
         this.graphHopperService = graphHopperService;
         this.messagingTemplate = messagingTemplate;
         this.idempotencyService = idempotencyService;
@@ -65,6 +67,7 @@ public class KafkaConsumerService {
         });
         this.simulationRegistry = simulationRegistry;
         this.vehicleStatusService = vehicleStatusService;
+        this.vehicleTelemetryService = vehicleTelemetryService;
     }
 
     @KafkaListener(topics = "vehicle-commands", groupId = "e-cargo-hub-consumers", containerFactory = "stringKafkaListenerContainerFactory")
@@ -178,14 +181,14 @@ public class KafkaConsumerService {
             try {
                 vehicleStatusService.updateStatus(vehicleId, coord[0], coord[1], progress, speed, "EN_RUTA");
             } catch (Exception e) {
-                log.warn("No se pudo persistir posición: {}", e.getMessage());
+                log.warn("No se pudo persistir última posición: {}", e.getMessage());
             }
 
+            // 💾 NUEVO: guardar el punto en el histórico
             try {
-                Thread.sleep(STEP_DELAY_MS);
-            } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                return;
+                vehicleTelemetryService.savePoint(vehicleId, coord[0], coord[1], progress, speed, "EN_RUTA");
+            } catch (Exception e) {
+                log.warn("No se pudo persistir punto de telemetría: {}", e.getMessage());
             }
 
             i++;
@@ -208,6 +211,13 @@ public class KafkaConsumerService {
             vehicleStatusService.updateStatus(vehicleId, DEST_LAT, DEST_LON, 100, 0.0, "COMPLETADO");
         } catch (Exception e) {
             log.warn("No se pudo persistir estado final: {}", e.getMessage());
+        }
+
+        // 💾 NUEVO: también guardamos el punto final en el histórico
+        try {
+            vehicleTelemetryService.savePoint(vehicleId, DEST_LAT, DEST_LON, 100, 0.0, "COMPLETADO");
+        } catch (Exception e) {
+            log.warn("No se pudo persistir punto final: {}", e.getMessage());
         }
 
         log.info("🏁 Vehículo {} llegó a destino.", vehicleId);

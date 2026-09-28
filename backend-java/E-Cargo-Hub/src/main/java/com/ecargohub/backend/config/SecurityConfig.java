@@ -21,7 +21,7 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Aplica CORS abierto
                 .authorizeHttpRequests(auth -> auth.requestMatchers("/ws/**").permitAll() // Abre el canal del WebSocket
                                                                                           // de forma pública
-                        .requestMatchers("/api/v1/vehicle-commands/**").permitAll() // Abre el controlador de Postman
+                        .requestMatchers("/api/vehicle-commands/**").permitAll() // Abre el controlador de Postman
                         .anyRequest().permitAll() // ⚠️ TEMPORAL: Permite todo el tráfico para asegurar la conexión
                 );
 
