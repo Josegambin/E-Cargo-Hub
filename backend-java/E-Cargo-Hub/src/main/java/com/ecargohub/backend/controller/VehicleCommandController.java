@@ -6,6 +6,8 @@ import com.ecargohub.backend.interfaces.VehicleCommandService;
 import com.ecargohub.backend.mapper.VehicleCommandMapper;
 import com.ecargohub.backend.repository.VehicleCommandRepository;
 
+import jakarta.validation.Valid;
+
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
@@ -28,7 +30,7 @@ public class VehicleCommandController {
 
     @PostMapping("/vehicle/{vehicleId}")
     public ResponseEntity<VehicleCommandDto> dispatchCommand(@PathVariable Long vehicleId,
-            @RequestBody VehicleCommandRequest request) {
+            @Valid @RequestBody VehicleCommandRequest request) {
 
         VehicleCommandDto dto = vehicleCommandService.sendCommand(vehicleId, request);
         return ResponseEntity.ok(dto);

@@ -72,6 +72,10 @@ public class VehicleCommandServiceImpl implements VehicleCommandService {
         entity.setCommand(request.command());
         entity.setValue(request.value());
         entity.setCreatedAt(OffsetDateTime.now());
+        entity.setOriginLat(request.originLat());
+        entity.setOriginLon(request.originLon());
+        entity.setDestLat(request.destLat());
+        entity.setDestLon(request.destLon());
 
         VehicleCommandEntity saved = commandRepository.save(entity);
         VehicleCommandDto dto = commandMapper.toDto(saved);

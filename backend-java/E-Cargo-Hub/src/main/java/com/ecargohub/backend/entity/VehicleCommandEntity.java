@@ -38,6 +38,18 @@ public class VehicleCommandEntity {
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
 
+    @Column(name = "origin_lat")
+    private Double originLat;
+
+    @Column(name = "origin_lon")
+    private Double originLon;
+
+    @Column(name = "dest_lat")
+    private Double destLat;
+
+    @Column(name = "dest_lon")
+    private Double destLon;
+
     @PrePersist
     void prePersist() {
         if (commandId == null)
