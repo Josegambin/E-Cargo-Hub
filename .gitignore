@@ -1,22 +1,71 @@
-# Compiled files
+# ==========================================
+# E-Cargo Hub — .gitignore
+# ==========================================
+
+# ---------- Java / Maven ----------
 target/
 *.class
+*.jar
+*.war
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
 
-# Maven
-.mvn/wrapper/maven-wrapper.jar
+# ---------- Node / Angular ----------
+node_modules/
+dist/
+.angular/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm/
+.pnpm-store/
 
-# IntelliJ
+# ---------- IDE ----------
 .idea/
 *.iml
-*.iws
 *.ipr
-
-# VS Code
+*.iws
 .vscode/
+!.vscode/extensions.json
+*.swp
+*.swo
+*~
 
-# Logs
-*.log
-
-# OS
+# ---------- Sistema operativo ----------
 .DS_Store
 Thumbs.db
+desktop.ini
+
+# ---------- Logs ----------
+*.log
+logs/
+/var/log/e-cargo-hub/
+
+# ---------- Variables de entorno ----------
+.env
+.env.local
+.env.*.local
+*.env
+
+# ---------- Docker ----------
+docker-compose.override.yml
+
+# ---------- Spring Boot ----------
+application-local.yml
+application-secret.yml
+
+# ---------- Certificados ----------
+*.pem
+*.key
+*.p12
+*.jks
+
+# ---------- Datos de BBDD ----------
+*.sql.gz
+*.dump
+backups/
+
+# ---------- Claude / Asistentes IA ----------
+.claude/
+.cursor/

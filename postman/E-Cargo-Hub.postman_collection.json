@@ -1,0 +1,542 @@
+{
+  "info": {
+    "_postman_id": "e-cargo-hub-collection-2025",
+    "name": "E-Cargo Hub",
+    "description": "Colección completa de endpoints del sistema E-Cargo Hub.\n\n**Proyecto:** Sistema de Simulación Logística en Tiempo Real\n**Autor:** Jose Manuel Gambin Manresa\n**Centro:** EFA El Campico\n\n## Variables de entorno\n- `baseUrl`: URL base del backend (default: http://localhost:8081)\n- `vehicleId`: ID del vehículo para pruebas (default: 1)\n\n## Cómo usar\n1. Importa esta colección en Postman.\n2. Configura las variables en el entorno.\n3. Ejecuta los endpoints en orden.\n",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "🏥 Health",
+      "item": [
+        {
+          "name": "Health check",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "health"]
+            },
+            "description": "Comprueba el estado general del sistema (DB, Kafka, Redis)."
+          },
+          "response": []
+        },
+        {
+          "name": "Info del proyecto",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/info",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "info"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Rutas registradas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/actuator/mappings",
+              "host": ["{{baseUrl}}"],
+              "path": ["actuator", "mappings"]
+            },
+            "description": "Lista TODAS las rutas registradas en Spring. Útil para detectar duplicados."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🚗 Vehículos",
+      "item": [
+        {
+          "name": "Listar vehículos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicles"]
+            },
+            "description": "Devuelve la lista completa de vehículos."
+          },
+          "response": []
+        },
+        {
+          "name": "Obtener vehículo por ID",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicles/{{vehicleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicles", "{{vehicleId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Crear vehículo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Vehículo de prueba\",\n  \"plate\": \"TEST-001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicles",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicles"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Actualizar vehículo",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Vehículo actualizado\",\n  \"plate\": \"TEST-002\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicles/{{vehicleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicles", "{{vehicleId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Eliminar vehículo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicles/{{vehicleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicles", "{{vehicleId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📊 Estado actual",
+      "item": [
+        {
+          "name": "Obtener estado actual",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicles/{{vehicleId}}/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicles", "{{vehicleId}}", "status"]
+            },
+            "description": "Devuelve la última posición conocida del vehículo. Si no tiene estado, devuelve IDLE."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📡 Telemetría",
+      "item": [
+        {
+          "name": "Histórico completo",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicles/{{vehicleId}}/telemetry",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicles", "{{vehicleId}}", "telemetry"]
+            },
+            "description": "Devuelve TODOS los puntos de telemetría del vehículo, ordenados cronológicamente."
+          },
+          "response": []
+        },
+        {
+          "name": "Histórico con filtro de fechas",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicles/{{vehicleId}}/telemetry?from=2026-09-30T00:00:00Z&to=2026-09-30T23:59:59Z",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicles", "{{vehicleId}}", "telemetry"],
+              "query": [
+                { "key": "from", "value": "2026-09-30T00:00:00Z" },
+                { "key": "to", "value": "2026-09-30T23:59:59Z" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Últimos 20 puntos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicles/{{vehicleId}}/telemetry/latest?limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicles", "{{vehicleId}}", "telemetry", "latest"],
+              "query": [
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Borrar histórico de telemetría",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicles/{{vehicleId}}/telemetry",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicles", "{{vehicleId}}", "telemetry"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "🎮 Comandos",
+      "item": [
+        {
+          "name": "▶ START (Cox → Murcia)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"command\": \"START\",\n  \"value\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicle-commands/vehicle/{{vehicleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicle-commands", "vehicle", "{{vehicleId}}"]
+            },
+            "description": "Envía un comando START sin coordenadas. Usa el trayecto por defecto Cox → Murcia."
+          },
+          "response": []
+        },
+        {
+          "name": "▶ START con coordenadas personalizadas",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"command\": \"START\",\n  \"value\": null,\n  \"originLat\": 37.9922,\n  \"originLon\": -1.1307,\n  \"destLat\": 37.6056,\n  \"destLon\": -0.9912\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicle-commands/vehicle/{{vehicleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicle-commands", "vehicle", "{{vehicleId}}"]
+            },
+            "description": "Envía un comando START con coordenadas personalizadas (Murcia → Cartagena)."
+          },
+          "response": []
+        },
+        {
+          "name": "⏸ PAUSE",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"command\": \"PAUSE\",\n  \"value\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicle-commands/vehicle/{{vehicleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicle-commands", "vehicle", "{{vehicleId}}"]
+            },
+            "description": "Pausa la simulación del vehículo. Devuelve 409 si el vehículo no está corriendo."
+          },
+          "response": []
+        },
+        {
+          "name": "⏵ RESUME",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"command\": \"RESUME\",\n  \"value\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicle-commands/vehicle/{{vehicleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicle-commands", "vehicle", "{{vehicleId}}"]
+            },
+            "description": "Reanuda la simulación pausada. Devuelve 409 si el vehículo no está pausado."
+          },
+          "response": []
+        },
+        {
+          "name": "⛔ STOP",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"command\": \"STOP\",\n  \"value\": null\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicle-commands/vehicle/{{vehicleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicle-commands", "vehicle", "{{vehicleId}}"]
+            },
+            "description": "Detiene la simulación. Devuelve 409 si el vehículo no está corriendo."
+          },
+          "response": []
+        },
+        {
+          "name": "📜 Historial de comandos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicle-commands/vehicle/{{vehicleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicle-commands", "vehicle", "{{vehicleId}}"]
+            },
+            "description": "Devuelve el historial completo de comandos del vehículo."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "❌ Casos de error (validación)",
+      "item": [
+        {
+          "name": "400 — Comando nulo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"value\": 1.0\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicle-commands/vehicle/{{vehicleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicle-commands", "vehicle", "{{vehicleId}}"]
+            },
+            "description": "Debe devolver 400 con 'command is required'."
+          },
+          "response": []
+        },
+        {
+          "name": "400 — Coordenadas fuera de rango",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"command\": \"START\",\n  \"originLat\": 999.0\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicle-commands/vehicle/{{vehicleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicle-commands", "vehicle", "{{vehicleId}}"]
+            },
+            "description": "Debe devolver 400 con 'originLat must be <= 90'."
+          },
+          "response": []
+        },
+        {
+          "name": "404 — Vehículo no encontrado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"command\": \"START\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicle-commands/vehicle/9999",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicle-commands", "vehicle", "9999"]
+            },
+            "description": "Debe devolver 404 con 'Vehicle not found: 9999'."
+          },
+          "response": []
+        },
+        {
+          "name": "409 — PAUSE sin estar corriendo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"command\": \"PAUSE\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/vehicle-commands/vehicle/{{vehicleId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "vehicle-commands", "vehicle", "{{vehicleId}}"]
+            },
+            "description": "Debe devolver 409 con 'Vehicle X is not running'."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "📚 Documentación",
+      "item": [
+        {
+          "name": "Swagger UI",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/swagger-ui.html",
+              "host": ["{{baseUrl}}"],
+              "path": ["swagger-ui.html"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "OpenAPI JSON",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/v3/api-docs",
+              "host": ["{{baseUrl}}"],
+              "path": ["v3", "api-docs"]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:8081",
+      "type": "string"
+    },
+    {
+      "key": "vehicleId",
+      "value": "1",
+      "type": "string"
+    }
+  ]
+}
