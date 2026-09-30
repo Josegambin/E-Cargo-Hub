@@ -15,7 +15,7 @@ export const AlertType = {
     VehicleStopped: 'VEHICLE_STOPPED',
     RouteDeviation: 'ROUTE_DEVIATION',
     CommunicationError: 'COMMUNICATION_ERROR',
-    SimulationError: 'SIMULATION_ERROR'
+    SimulationError: 'SIMULATION_ERROR',
 } as const;
 export type AlertType = typeof AlertType[keyof typeof AlertType];
 

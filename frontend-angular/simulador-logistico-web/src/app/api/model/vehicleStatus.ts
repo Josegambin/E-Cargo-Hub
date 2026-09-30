@@ -14,7 +14,7 @@ export const VehicleStatus = {
     Running: 'RUNNING',
     Paused: 'PAUSED',
     Stopped: 'STOPPED',
-    Error: 'ERROR'
+    Error: 'ERROR',
 } as const;
 export type VehicleStatus = typeof VehicleStatus[keyof typeof VehicleStatus];
 

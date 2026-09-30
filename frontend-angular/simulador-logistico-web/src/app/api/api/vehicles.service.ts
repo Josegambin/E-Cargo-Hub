@@ -11,10 +11,10 @@
 
 import { Inject, Injectable, Optional }                      from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams,
-         HttpResponse, HttpEvent, HttpParameterCodec, HttpContext 
+         HttpResponse, HttpEvent, HttpContext 
         }       from '@angular/common/http';
-import { CustomHttpParameterCodec }                          from '../encoder';
 import { Observable }                                        from 'rxjs';
+import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
 import { ApiError } from '../model/apiError';
@@ -29,16 +29,13 @@ import { Vehicle } from '../model/vehicle';
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
 import { Configuration }                                     from '../configuration';
 import { BaseService } from '../api.base.service';
-import {
-    VehiclesServiceInterface
-} from './vehicles.serviceInterface';
 
 
 
 @Injectable({
   providedIn: 'root'
 })
-export class VehiclesService extends BaseService implements VehiclesServiceInterface {
+export class VehiclesService extends BaseService {
 
     constructor(protected httpClient: HttpClient, @Optional() @Inject(BASE_PATH) basePath: string|string[], @Optional() configuration?: Configuration) {
         super(basePath, configuration);
@@ -46,9 +43,11 @@ export class VehiclesService extends BaseService implements VehiclesServiceInter
 
     /**
      * Crear vehículo
+     * @endpoint post /api/vehicles
      * @param createVehicleRequest 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public createVehicle(createVehicleRequest: CreateVehicleRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Vehicle>;
     public createVehicle(createVehicleRequest: CreateVehicleRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Vehicle>>;
@@ -102,7 +101,7 @@ export class VehiclesService extends BaseService implements VehiclesServiceInter
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -110,9 +109,11 @@ export class VehiclesService extends BaseService implements VehiclesServiceInter
 
     /**
      * Eliminar vehículo
+     * @endpoint delete /api/vehicles/{vehicleId}
      * @param vehicleId Identificador del vehículo
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public deleteVehicle(vehicleId: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any>;
     public deleteVehicle(vehicleId: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
@@ -156,7 +157,7 @@ export class VehiclesService extends BaseService implements VehiclesServiceInter
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -164,9 +165,11 @@ export class VehiclesService extends BaseService implements VehiclesServiceInter
 
     /**
      * Obtener vehículo
+     * @endpoint get /api/vehicles/{vehicleId}
      * @param vehicleId Identificador del vehículo
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public getVehicle(vehicleId: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Vehicle>;
     public getVehicle(vehicleId: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Vehicle>>;
@@ -210,7 +213,7 @@ export class VehiclesService extends BaseService implements VehiclesServiceInter
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -218,8 +221,10 @@ export class VehiclesService extends BaseService implements VehiclesServiceInter
 
     /**
      * Obtener vehículos
+     * @endpoint get /api/vehicles
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public getVehicles(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<Vehicle>>;
     public getVehicles(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<Vehicle>>>;
@@ -260,7 +265,7 @@ export class VehiclesService extends BaseService implements VehiclesServiceInter
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -268,10 +273,12 @@ export class VehiclesService extends BaseService implements VehiclesServiceInter
 
     /**
      * Actualizar vehículo
+     * @endpoint put /api/vehicles/{vehicleId}
      * @param vehicleId Identificador del vehículo
      * @param updateVehicleRequest 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public updateVehicle(vehicleId: number, updateVehicleRequest: UpdateVehicleRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Vehicle>;
     public updateVehicle(vehicleId: number, updateVehicleRequest: UpdateVehicleRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Vehicle>>;
@@ -328,7 +335,7 @@ export class VehiclesService extends BaseService implements VehiclesServiceInter
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );

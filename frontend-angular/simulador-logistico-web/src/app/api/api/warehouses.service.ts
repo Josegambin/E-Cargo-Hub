@@ -11,10 +11,10 @@
 
 import { Inject, Injectable, Optional }                      from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams,
-         HttpResponse, HttpEvent, HttpParameterCodec, HttpContext 
+         HttpResponse, HttpEvent, HttpContext 
         }       from '@angular/common/http';
-import { CustomHttpParameterCodec }                          from '../encoder';
 import { Observable }                                        from 'rxjs';
+import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
 import { ApiError } from '../model/apiError';
@@ -29,16 +29,13 @@ import { Warehouse } from '../model/warehouse';
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
 import { Configuration }                                     from '../configuration';
 import { BaseService } from '../api.base.service';
-import {
-    WarehousesServiceInterface
-} from './warehouses.serviceInterface';
 
 
 
 @Injectable({
   providedIn: 'root'
 })
-export class WarehousesService extends BaseService implements WarehousesServiceInterface {
+export class WarehousesService extends BaseService {
 
     constructor(protected httpClient: HttpClient, @Optional() @Inject(BASE_PATH) basePath: string|string[], @Optional() configuration?: Configuration) {
         super(basePath, configuration);
@@ -46,9 +43,11 @@ export class WarehousesService extends BaseService implements WarehousesServiceI
 
     /**
      * Crear almacén
+     * @endpoint post /api/warehouses
      * @param createWarehouseRequest 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public createWarehouse(createWarehouseRequest: CreateWarehouseRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Warehouse>;
     public createWarehouse(createWarehouseRequest: CreateWarehouseRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Warehouse>>;
@@ -102,7 +101,7 @@ export class WarehousesService extends BaseService implements WarehousesServiceI
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -110,9 +109,11 @@ export class WarehousesService extends BaseService implements WarehousesServiceI
 
     /**
      * Eliminar almacén
+     * @endpoint delete /api/warehouses/{warehouseId}
      * @param warehouseId Identificador del almacén
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public deleteWarehouse(warehouseId: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any>;
     public deleteWarehouse(warehouseId: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
@@ -156,7 +157,7 @@ export class WarehousesService extends BaseService implements WarehousesServiceI
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -164,9 +165,11 @@ export class WarehousesService extends BaseService implements WarehousesServiceI
 
     /**
      * Obtener almacén
+     * @endpoint get /api/warehouses/{warehouseId}
      * @param warehouseId Identificador del almacén
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public getWarehouse(warehouseId: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Warehouse>;
     public getWarehouse(warehouseId: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Warehouse>>;
@@ -210,7 +213,7 @@ export class WarehousesService extends BaseService implements WarehousesServiceI
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -218,8 +221,10 @@ export class WarehousesService extends BaseService implements WarehousesServiceI
 
     /**
      * Obtener almacenes
+     * @endpoint get /api/warehouses
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public getWarehouses(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<Warehouse>>;
     public getWarehouses(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<Warehouse>>>;
@@ -260,7 +265,7 @@ export class WarehousesService extends BaseService implements WarehousesServiceI
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -268,10 +273,12 @@ export class WarehousesService extends BaseService implements WarehousesServiceI
 
     /**
      * Actualizar almacén
+     * @endpoint put /api/warehouses/{warehouseId}
      * @param warehouseId Identificador del almacén
      * @param updateWarehouseRequest 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public updateWarehouse(warehouseId: number, updateWarehouseRequest: UpdateWarehouseRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Warehouse>;
     public updateWarehouse(warehouseId: number, updateWarehouseRequest: UpdateWarehouseRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Warehouse>>;
@@ -328,7 +335,7 @@ export class WarehousesService extends BaseService implements WarehousesServiceI
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );

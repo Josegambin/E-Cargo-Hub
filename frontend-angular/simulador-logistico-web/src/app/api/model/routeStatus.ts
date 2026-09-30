@@ -13,7 +13,7 @@ export const RouteStatus = {
     Created: 'CREATED',
     Calculating: 'CALCULATING',
     Ready: 'READY',
-    Error: 'ERROR'
+    Error: 'ERROR',
 } as const;
 export type RouteStatus = typeof RouteStatus[keyof typeof RouteStatus];
 

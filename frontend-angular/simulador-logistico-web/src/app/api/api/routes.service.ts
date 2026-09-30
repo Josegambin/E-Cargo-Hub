@@ -11,10 +11,10 @@
 
 import { Inject, Injectable, Optional }                      from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams,
-         HttpResponse, HttpEvent, HttpParameterCodec, HttpContext 
+         HttpResponse, HttpEvent, HttpContext 
         }       from '@angular/common/http';
-import { CustomHttpParameterCodec }                          from '../encoder';
 import { Observable }                                        from 'rxjs';
+import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
 import { ApiError } from '../model/apiError';
@@ -27,16 +27,13 @@ import { Route } from '../model/route';
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
 import { Configuration }                                     from '../configuration';
 import { BaseService } from '../api.base.service';
-import {
-    RoutesServiceInterface
-} from './routes.serviceInterface';
 
 
 
 @Injectable({
   providedIn: 'root'
 })
-export class RoutesService extends BaseService implements RoutesServiceInterface {
+export class RoutesService extends BaseService {
 
     constructor(protected httpClient: HttpClient, @Optional() @Inject(BASE_PATH) basePath: string|string[], @Optional() configuration?: Configuration) {
         super(basePath, configuration);
@@ -45,9 +42,11 @@ export class RoutesService extends BaseService implements RoutesServiceInterface
     /**
      * Crear una ruta
      * Crea una ruta entre dos puntos. La ruta podrá ser calculada posteriormente mediante GraphHopper utilizando datos de OpenStreetMap. 
+     * @endpoint post /api/routes
      * @param createRouteRequest 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public createRoute(createRouteRequest: CreateRouteRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Route>;
     public createRoute(createRouteRequest: CreateRouteRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Route>>;
@@ -101,7 +100,7 @@ export class RoutesService extends BaseService implements RoutesServiceInterface
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -109,9 +108,11 @@ export class RoutesService extends BaseService implements RoutesServiceInterface
 
     /**
      * Obtener ruta
+     * @endpoint get /api/routes/{routeId}
      * @param routeId Identificador de la ruta
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public getRoute(routeId: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Route>;
     public getRoute(routeId: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Route>>;
@@ -155,7 +156,7 @@ export class RoutesService extends BaseService implements RoutesServiceInterface
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -163,8 +164,10 @@ export class RoutesService extends BaseService implements RoutesServiceInterface
 
     /**
      * Obtener rutas
+     * @endpoint get /api/routes
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public getRoutes(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<Route>>;
     public getRoutes(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<Route>>>;
@@ -205,7 +208,7 @@ export class RoutesService extends BaseService implements RoutesServiceInterface
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );

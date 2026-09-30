@@ -12,7 +12,7 @@
 export const AlertSeverity = {
     Info: 'INFO',
     Warning: 'WARNING',
-    Critical: 'CRITICAL'
+    Critical: 'CRITICAL',
 } as const;
 export type AlertSeverity = typeof AlertSeverity[keyof typeof AlertSeverity];
 

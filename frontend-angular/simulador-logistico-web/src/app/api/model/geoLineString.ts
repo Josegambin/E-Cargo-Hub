@@ -18,7 +18,7 @@ export interface GeoLineString {
 }
 export namespace GeoLineString {
     export const TypeEnum = {
-        LineString: 'LineString'
+        LineString: 'LineString',
     } as const;
     export type TypeEnum = typeof TypeEnum[keyof typeof TypeEnum];
 }

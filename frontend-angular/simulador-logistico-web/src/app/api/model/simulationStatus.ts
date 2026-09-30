@@ -15,7 +15,7 @@ export const SimulationStatus = {
     Paused: 'PAUSED',
     Finished: 'FINISHED',
     Stopped: 'STOPPED',
-    Error: 'ERROR'
+    Error: 'ERROR',
 } as const;
 export type SimulationStatus = typeof SimulationStatus[keyof typeof SimulationStatus];
 

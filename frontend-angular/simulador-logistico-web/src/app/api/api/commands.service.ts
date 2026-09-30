@@ -11,10 +11,10 @@
 
 import { Inject, Injectable, Optional }                      from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams,
-         HttpResponse, HttpEvent, HttpParameterCodec, HttpContext 
+         HttpResponse, HttpEvent, HttpContext 
         }       from '@angular/common/http';
-import { CustomHttpParameterCodec }                          from '../encoder';
 import { Observable }                                        from 'rxjs';
+import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
 import { ApiError } from '../model/apiError';
@@ -27,16 +27,13 @@ import { VehicleCommandRequest } from '../model/vehicleCommandRequest';
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
 import { Configuration }                                     from '../configuration';
 import { BaseService } from '../api.base.service';
-import {
-    CommandsServiceInterface
-} from './commands.serviceInterface';
 
 
 
 @Injectable({
   providedIn: 'root'
 })
-export class CommandsService extends BaseService implements CommandsServiceInterface {
+export class CommandsService extends BaseService {
 
     constructor(protected httpClient: HttpClient, @Optional() @Inject(BASE_PATH) basePath: string|string[], @Optional() configuration?: Configuration) {
         super(basePath, configuration);
@@ -45,10 +42,12 @@ export class CommandsService extends BaseService implements CommandsServiceInter
     /**
      * Enviar comando a un vehículo
      * Envía un comando al vehículo.  El backend publicará el comando en Kafka. El simulador Python consumirá el evento y modificará el comportamiento del vehículo. 
+     * @endpoint post /api/vehicles/{vehicleId}/commands
      * @param vehicleId Identificador del vehículo
      * @param vehicleCommandRequest 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public sendVehicleCommand(vehicleId: number, vehicleCommandRequest: VehicleCommandRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<VehicleCommand>;
     public sendVehicleCommand(vehicleId: number, vehicleCommandRequest: VehicleCommandRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<VehicleCommand>>;
@@ -105,7 +104,7 @@ export class CommandsService extends BaseService implements CommandsServiceInter
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );

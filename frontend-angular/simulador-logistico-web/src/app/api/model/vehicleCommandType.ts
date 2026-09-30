@@ -17,7 +17,7 @@ export const VehicleCommandType = {
     SetSpeed: 'SET_SPEED',
     IncreaseSpeed: 'INCREASE_SPEED',
     DecreaseSpeed: 'DECREASE_SPEED',
-    EmergencyBrake: 'EMERGENCY_BRAKE'
+    EmergencyBrake: 'EMERGENCY_BRAKE',
 } as const;
 export type VehicleCommandType = typeof VehicleCommandType[keyof typeof VehicleCommandType];
 

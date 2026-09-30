@@ -11,10 +11,10 @@
 
 import { Inject, Injectable, Optional }                      from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams,
-         HttpResponse, HttpEvent, HttpParameterCodec, HttpContext 
+         HttpResponse, HttpEvent, HttpContext 
         }       from '@angular/common/http';
-import { CustomHttpParameterCodec }                          from '../encoder';
 import { Observable }                                        from 'rxjs';
+import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
 import { AlertSeverity } from '../model/alertSeverity';
@@ -25,16 +25,13 @@ import { VehicleAlert } from '../model/vehicleAlert';
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
 import { Configuration }                                     from '../configuration';
 import { BaseService } from '../api.base.service';
-import {
-    AlertsServiceInterface
-} from './alerts.serviceInterface';
 
 
 
 @Injectable({
   providedIn: 'root'
 })
-export class AlertsService extends BaseService implements AlertsServiceInterface {
+export class AlertsService extends BaseService {
 
     constructor(protected httpClient: HttpClient, @Optional() @Inject(BASE_PATH) basePath: string|string[], @Optional() configuration?: Configuration) {
         super(basePath, configuration);
@@ -42,24 +39,47 @@ export class AlertsService extends BaseService implements AlertsServiceInterface
 
     /**
      * Obtener alertas
+     * @endpoint get /api/alerts
      * @param vehicleId 
      * @param simulationId 
      * @param severity 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public getAlerts(vehicleId?: number, simulationId?: number, severity?: AlertSeverity, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<VehicleAlert>>;
     public getAlerts(vehicleId?: number, simulationId?: number, severity?: AlertSeverity, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<VehicleAlert>>>;
     public getAlerts(vehicleId?: number, simulationId?: number, severity?: AlertSeverity, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<VehicleAlert>>>;
     public getAlerts(vehicleId?: number, simulationId?: number, severity?: AlertSeverity, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
-        let localVarQueryParameters = new HttpParams({encoder: this.encoder});
-        localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-          <any>vehicleId, 'vehicleId');
-        localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-          <any>simulationId, 'simulationId');
-        localVarQueryParameters = this.addToHttpParams(localVarQueryParameters,
-          <any>severity, 'severity');
+        let localVarQueryParameters = new OpenApiHttpParams(this.encoder);
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'vehicleId',
+            <any>vehicleId,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'simulationId',
+            <any>simulationId,
+            QueryParamStyle.Form,
+            true,
+        );
+
+
+        localVarQueryParameters = this.addToHttpParams(
+            localVarQueryParameters,
+            'severity',
+            <any>severity,
+            QueryParamStyle.Form,
+            true,
+        );
+
 
         let localVarHeaders = this.defaultHeaders;
 
@@ -91,12 +111,12 @@ export class AlertsService extends BaseService implements AlertsServiceInterface
         return this.httpClient.request<Array<VehicleAlert>>('get', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
-                params: localVarQueryParameters,
+                params: localVarQueryParameters.toHttpParams(),
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );

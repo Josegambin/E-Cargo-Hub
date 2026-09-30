@@ -11,10 +11,10 @@
 
 import { Inject, Injectable, Optional }                      from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams,
-         HttpResponse, HttpEvent, HttpParameterCodec, HttpContext 
+         HttpResponse, HttpEvent, HttpContext 
         }       from '@angular/common/http';
-import { CustomHttpParameterCodec }                          from '../encoder';
 import { Observable }                                        from 'rxjs';
+import { OpenApiHttpParams, QueryParamStyle } from '../query.params';
 
 // @ts-ignore
 import { ApiError } from '../model/apiError';
@@ -27,16 +27,13 @@ import { Simulation } from '../model/simulation';
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
 import { Configuration }                                     from '../configuration';
 import { BaseService } from '../api.base.service';
-import {
-    SimulationsServiceInterface
-} from './simulations.serviceInterface';
 
 
 
 @Injectable({
   providedIn: 'root'
 })
-export class SimulationsService extends BaseService implements SimulationsServiceInterface {
+export class SimulationsService extends BaseService {
 
     constructor(protected httpClient: HttpClient, @Optional() @Inject(BASE_PATH) basePath: string|string[], @Optional() configuration?: Configuration) {
         super(basePath, configuration);
@@ -44,9 +41,11 @@ export class SimulationsService extends BaseService implements SimulationsServic
 
     /**
      * Crear simulación
+     * @endpoint post /api/simulations
      * @param createSimulationRequest 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public createSimulation(createSimulationRequest: CreateSimulationRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Simulation>;
     public createSimulation(createSimulationRequest: CreateSimulationRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Simulation>>;
@@ -100,7 +99,7 @@ export class SimulationsService extends BaseService implements SimulationsServic
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -108,9 +107,11 @@ export class SimulationsService extends BaseService implements SimulationsServic
 
     /**
      * Obtener simulación
+     * @endpoint get /api/simulations/{simulationId}
      * @param simulationId Identificador de la simulación
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public getSimulation(simulationId: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Simulation>;
     public getSimulation(simulationId: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Simulation>>;
@@ -154,7 +155,7 @@ export class SimulationsService extends BaseService implements SimulationsServic
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -162,8 +163,10 @@ export class SimulationsService extends BaseService implements SimulationsServic
 
     /**
      * Obtener simulaciones
+     * @endpoint get /api/simulations
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public getSimulations(observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<Simulation>>;
     public getSimulations(observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<Simulation>>>;
@@ -204,7 +207,7 @@ export class SimulationsService extends BaseService implements SimulationsServic
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -212,9 +215,11 @@ export class SimulationsService extends BaseService implements SimulationsServic
 
     /**
      * Pausar simulación
+     * @endpoint post /api/simulations/{simulationId}/pause
      * @param simulationId Identificador de la simulación
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public pauseSimulation(simulationId: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Simulation>;
     public pauseSimulation(simulationId: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Simulation>>;
@@ -258,7 +263,7 @@ export class SimulationsService extends BaseService implements SimulationsServic
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -266,9 +271,11 @@ export class SimulationsService extends BaseService implements SimulationsServic
 
     /**
      * Reanudar simulación
+     * @endpoint post /api/simulations/{simulationId}/resume
      * @param simulationId Identificador de la simulación
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public resumeSimulation(simulationId: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Simulation>;
     public resumeSimulation(simulationId: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Simulation>>;
@@ -312,7 +319,7 @@ export class SimulationsService extends BaseService implements SimulationsServic
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -320,9 +327,11 @@ export class SimulationsService extends BaseService implements SimulationsServic
 
     /**
      * Iniciar simulación
+     * @endpoint post /api/simulations/{simulationId}/start
      * @param simulationId Identificador de la simulación
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public startSimulation(simulationId: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Simulation>;
     public startSimulation(simulationId: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Simulation>>;
@@ -366,7 +375,7 @@ export class SimulationsService extends BaseService implements SimulationsServic
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
@@ -374,9 +383,11 @@ export class SimulationsService extends BaseService implements SimulationsServic
 
     /**
      * Detener simulación
+     * @endpoint post /api/simulations/{simulationId}/stop
      * @param simulationId Identificador de la simulación
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
+     * @param options additional options
      */
     public stopSimulation(simulationId: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Simulation>;
     public stopSimulation(simulationId: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Simulation>>;
@@ -420,7 +431,7 @@ export class SimulationsService extends BaseService implements SimulationsServic
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,
                 observe: observe,
-                transferCache: localVarTransferCache,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
                 reportProgress: reportProgress
             }
         );
