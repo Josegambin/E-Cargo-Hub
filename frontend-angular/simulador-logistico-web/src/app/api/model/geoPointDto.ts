@@ -7,12 +7,10 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { GeoPointDto } from './geoPointDto';
 
 
-export interface CreateRouteRequest { 
-    name: string;
-    origin: GeoPointDto;
-    destination: GeoPointDto;
+export interface GeoPointDto { 
+    latitude: number;
+    longitude: number;
 }
 

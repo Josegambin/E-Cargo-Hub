@@ -10,35 +10,51 @@
 
 
 /**
- * Petición de comando a un vehículo
+ * Comando de vehículo persistido y publicado en Kafka
  */
-export interface VehicleCommandRequest { 
+export interface VehicleCommandDto { 
     /**
-     * Tipo de comando a ejecutar
+     * ID interno en BBDD
      */
-    command: VehicleCommandRequest.CommandEnum;
+    id?: number;
     /**
-     * Valor asociado al comando (opcional)
+     * UUID único del comando (idempotencia)
+     */
+    commandId?: string;
+    /**
+     * ID del vehículo
+     */
+    vehicleId?: number;
+    /**
+     * Tipo de comando
+     */
+    command?: VehicleCommandDto.CommandEnum;
+    /**
+     * Valor asociado (opcional)
      */
     value?: number;
     /**
-     * Latitud del origen (opcional, si no se envía usa Cox)
+     * Latitud de origen (opcional)
      */
     originLat?: number;
     /**
-     * Longitud del origen (opcional, si no se envía usa Cox)
+     * Longitud de origen (opcional)
      */
     originLon?: number;
     /**
-     * Latitud del destino (opcional, si no se envía usa Murcia)
+     * Latitud de destino (opcional)
      */
     destLat?: number;
     /**
-     * Longitud del destino (opcional, si no se envía usa Murcia)
+     * Longitud de destino (opcional)
      */
     destLon?: number;
+    /**
+     * Fecha de creación (ISO-8601)
+     */
+    createdAt?: string;
 }
-export namespace VehicleCommandRequest {
+export namespace VehicleCommandDto {
     export const CommandEnum = {
         Start: 'START',
         Pause: 'PAUSE',

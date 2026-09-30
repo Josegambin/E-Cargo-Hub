@@ -10,9 +10,10 @@
 import { GeoPointDto } from './geoPointDto';
 
 
-export interface CreateRouteRequest { 
-    name: string;
-    origin: GeoPointDto;
-    destination: GeoPointDto;
+export interface WarehouseDto { 
+    id?: number;
+    name?: string;
+    address?: string;
+    location?: GeoPointDto;
 }
 
