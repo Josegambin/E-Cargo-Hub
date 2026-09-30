@@ -60,13 +60,15 @@ services:
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: simulador-kafka:9094
   
   simulador-redis:
-    image: redis:7-alpine
+    image: redis:7 # Cambiado de 7-alpine a 7 (Debian) para evitar problemas de permisos
     container_name: simulador-redis
+    restart: unless-stopped # Añadido para que inicie siempre con el sistema
     ports:
       - "6379:6379"
     command: redis-server --appendonly yes
     volumes:
       - redis-data:/data
+
 
 volumes:
   postgres_data:

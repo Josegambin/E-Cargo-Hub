@@ -36,11 +36,10 @@ spring:
       properties:
         enable.idempotence: true
 
-  # ✅ AHORA SÍ está dentro de spring
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
       timeout: 2s
       lettuce:
         pool:
@@ -48,14 +47,35 @@ spring:
           max-idle: 8
           min-idle: 0
 
+# ==========================================
+# CORS (namespace propio, NO dentro de spring)
+# ==========================================
+app:
+  cors:
+    allowed-origins: >
+      http://localhost:4200,
+      http://localhost,
+      http://127.0.0.1,
+      http://localhost:8080,
+      http://localhost:5173
+
+# ==========================================
+# GraphHopper
+# ==========================================
 graphhopper:
   api:
     key: ${GRAPHHOPPER_API_KEY:f9da97c3-e894-406e-823b-086ecd55b497}
     url: https://graphhopper.com/api/1
 
+# ==========================================
+# Servidor
+# ==========================================
 server:
   port: 8081
 
+# ==========================================
+# Actuator + Health checks
+# ==========================================
 management:
   endpoints:
     web:
@@ -63,3 +83,53 @@ management:
         include:
           - health
           - info
+          - metrics
+          - mappings
+  endpoint:
+    health:
+      show-details: always
+      probes:
+        enabled: true
+  info:
+    env:
+      enabled: true
+    java:
+      enabled: true
+    build:
+      enabled: true
+
+# ==========================================
+# Info del proyecto (aparece en /actuator/info)
+# ==========================================
+info:
+  app:
+    name: E-Cargo Hub
+    description: Backend de simulación logística con Kafka, WebSocket y PostGIS
+    version: 1.0.0-SNAPSHOT
+    java-version: 21
+
+# ==========================================
+# Logs (niveles por paquete)
+# ==========================================
+logging:
+  level:
+    root: INFO
+    com.ecargohub.backend: INFO
+    org.springframework.kafka: WARN
+    org.hibernate.SQL: WARN
+    org.springframework.web: INFO
+
+# ==========================================
+# Swagger / OpenAPI (para el Sprint B)
+# ==========================================
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: method
+    tags-sorter: alpha
+    display-request-duration: true
+    try-it-out-enabled: true
+  show-actuator: true
