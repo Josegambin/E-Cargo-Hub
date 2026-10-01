@@ -1,1 +1,39 @@
-/* You can add global styles to this file, and also import other style files */
+/* 1️⃣ Imports de librerías (SIEMPRE primero) */
+@import '@angular/material/prebuilt-themes/azure-blue.css';
+@import 'leaflet/dist/leaflet.css';
+
+/* 2️⃣ Tailwind */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* 3️⃣ Estilos globales */
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+body {
+    @apply bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100;
+}
+
+.spacer { flex: 1 1 auto; }
+
+/* 🎨 Scrollbar personalizado */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    @apply bg-gray-100 dark:bg-gray-800;
+}
+
+::-webkit-scrollbar-thumb {
+    @apply bg-gray-400 dark:bg-gray-600 rounded;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-500 dark:bg-gray-500;
+}
