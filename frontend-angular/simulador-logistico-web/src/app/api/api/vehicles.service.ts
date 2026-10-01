@@ -1,5 +1,5 @@
 /**
- * Simulador Logístico
+ * E-Cargo Hub API
  *
  * Contact: admin@simulador-logistico.local
  *
@@ -24,6 +24,8 @@ import { CreateVehicleRequest } from '../model/createVehicleRequest';
 import { UpdateVehicleRequest } from '../model/updateVehicleRequest';
 // @ts-ignore
 import { Vehicle } from '../model/vehicle';
+// @ts-ignore
+import { VehicleStatusDto } from '../model/vehicleStatusDto';
 
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
@@ -43,7 +45,7 @@ export class VehiclesService extends BaseService {
 
     /**
      * Crear vehículo
-     * @endpoint post /api/vehicles
+     * @endpoint post /api/v1/vehicles
      * @param createVehicleRequest 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -91,7 +93,7 @@ export class VehiclesService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/vehicles`;
+        let localVarPath = `/api/v1/vehicles`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Vehicle>('post', `${basePath}${localVarPath}`,
             {
@@ -109,7 +111,7 @@ export class VehiclesService extends BaseService {
 
     /**
      * Eliminar vehículo
-     * @endpoint delete /api/vehicles/{vehicleId}
+     * @endpoint delete /api/v1/vehicles/{vehicleId}
      * @param vehicleId Identificador del vehículo
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -148,7 +150,7 @@ export class VehiclesService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/vehicles/${this.configuration.encodeParam({name: "vehicleId", value: vehicleId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}`;
+        let localVarPath = `/api/v1/vehicles/${this.configuration.encodeParam({name: "vehicleId", value: vehicleId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<any>('delete', `${basePath}${localVarPath}`,
             {
@@ -165,7 +167,7 @@ export class VehiclesService extends BaseService {
 
     /**
      * Obtener vehículo
-     * @endpoint get /api/vehicles/{vehicleId}
+     * @endpoint get /api/v1/vehicles/{vehicleId}
      * @param vehicleId Identificador del vehículo
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -204,7 +206,7 @@ export class VehiclesService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/vehicles/${this.configuration.encodeParam({name: "vehicleId", value: vehicleId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}`;
+        let localVarPath = `/api/v1/vehicles/${this.configuration.encodeParam({name: "vehicleId", value: vehicleId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Vehicle>('get', `${basePath}${localVarPath}`,
             {
@@ -220,8 +222,64 @@ export class VehiclesService extends BaseService {
     }
 
     /**
+     * Obtener el estado actual del vehículo
+     * @endpoint get /api/v1/vehicles/{vehicleId}/status
+     * @param vehicleId Identificador del vehículo
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public getVehicleStatus(vehicleId: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<VehicleStatusDto>;
+    public getVehicleStatus(vehicleId: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<VehicleStatusDto>>;
+    public getVehicleStatus(vehicleId: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<VehicleStatusDto>>;
+    public getVehicleStatus(vehicleId: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (vehicleId === null || vehicleId === undefined) {
+            throw new Error('Required parameter vehicleId was null or undefined when calling getVehicleStatus.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/vehicles/${this.configuration.encodeParam({name: "vehicleId", value: vehicleId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/status`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<VehicleStatusDto>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
      * Obtener vehículos
-     * @endpoint get /api/vehicles
+     * @endpoint get /api/v1/vehicles
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
@@ -256,7 +314,7 @@ export class VehiclesService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/vehicles`;
+        let localVarPath = `/api/v1/vehicles`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Array<Vehicle>>('get', `${basePath}${localVarPath}`,
             {
@@ -273,7 +331,7 @@ export class VehiclesService extends BaseService {
 
     /**
      * Actualizar vehículo
-     * @endpoint put /api/vehicles/{vehicleId}
+     * @endpoint put /api/v1/vehicles/{vehicleId}
      * @param vehicleId Identificador del vehículo
      * @param updateVehicleRequest 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
@@ -325,7 +383,7 @@ export class VehiclesService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/vehicles/${this.configuration.encodeParam({name: "vehicleId", value: vehicleId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}`;
+        let localVarPath = `/api/v1/vehicles/${this.configuration.encodeParam({name: "vehicleId", value: vehicleId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Vehicle>('put', `${basePath}${localVarPath}`,
             {

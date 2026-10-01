@@ -1,5 +1,5 @@
 /**
- * Simulador Logístico
+ * E-Cargo Hub API
  *
  * Contact: admin@simulador-logistico.local
  *
@@ -7,15 +7,19 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
-import { VehicleCommandType } from './vehicleCommandType';
+import { ExecutableVehicleCommandType } from './executableVehicleCommandType';
 
 
 export interface VehicleCommandRequest { 
-    command: VehicleCommandType;
+    command: ExecutableVehicleCommandType;
     /**
      * Valor asociado al comando. Por ejemplo, velocidad objetivo para SET_SPEED. 
      */
-    value?: number;
+    value?: number | null;
+    originLat?: number | null;
+    originLon?: number | null;
+    destLat?: number | null;
+    destLon?: number | null;
 }
 export namespace VehicleCommandRequest {
 }

@@ -4,7 +4,6 @@ import com.ecargohub.backend.domain.enums.AlertSeverityEnum;
 import com.ecargohub.backend.domain.enums.AlertTypeEnum;
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.OffsetDateTime;
@@ -13,7 +12,6 @@ import java.time.OffsetDateTime;
 @Table(name = "vehicle_alerts")
 @Getter
 @Setter
-@NoArgsConstructor
 public class VehicleAlertEntity {
 
     @Id

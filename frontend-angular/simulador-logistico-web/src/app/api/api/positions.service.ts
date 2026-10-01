@@ -1,5 +1,5 @@
 /**
- * Simulador Logístico
+ * E-Cargo Hub API
  *
  * Contact: admin@simulador-logistico.local
  *
@@ -39,7 +39,7 @@ export class PositionsService extends BaseService {
 
     /**
      * Obtener posición actual del vehículo
-     * @endpoint get /api/vehicles/{vehicleId}/position
+     * @endpoint get /api/v1/vehicles/{vehicleId}/position
      * @param vehicleId Identificador del vehículo
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -78,7 +78,7 @@ export class PositionsService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/vehicles/${this.configuration.encodeParam({name: "vehicleId", value: vehicleId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/position`;
+        let localVarPath = `/api/v1/vehicles/${this.configuration.encodeParam({name: "vehicleId", value: vehicleId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/position`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<VehiclePosition>('get', `${basePath}${localVarPath}`,
             {

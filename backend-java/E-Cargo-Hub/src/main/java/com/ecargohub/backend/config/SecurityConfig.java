@@ -19,11 +19,7 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(csrf -> csrf.disable()) // Deshabilita CSRF para pruebas locales
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Aplica CORS abierto
-                .authorizeHttpRequests(auth -> auth.requestMatchers("/ws/**").permitAll() // Abre el canal del WebSocket
-                                                                                          // de forma pública
-                        .requestMatchers("/api/vehicle-commands/**").permitAll() // Abre el controlador de Postman
-                        .anyRequest().permitAll() // ⚠️ TEMPORAL: Permite todo el tráfico para asegurar la conexión
-                );
+                .authorizeHttpRequests(auth -> auth.requestMatchers("/ws/**").permitAll().anyRequest().permitAll());
 
         return http.build();
     }

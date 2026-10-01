@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/simulations")
+@RequestMapping("/api/v1/simulations")
 public class SimulationController {
 
     private final SimulationService simulationService;

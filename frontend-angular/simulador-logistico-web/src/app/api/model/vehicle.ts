@@ -1,5 +1,5 @@
 /**
- * Simulador Logístico
+ * E-Cargo Hub API
  *
  * Contact: admin@simulador-logistico.local
  *
@@ -18,7 +18,7 @@ export interface Vehicle {
     type: VehicleType;
     maxSpeed: number;
     status: VehicleStatus;
-    currentPosition?: VehiclePosition;
+    currentPosition?: VehiclePosition | null;
 }
 export namespace Vehicle {
 }

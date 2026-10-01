@@ -9,15 +9,14 @@
  */
 
 
-export const VehicleCommandType = {
+/**
+ * Comandos actualmente soportados por el backend
+ */
+export const ExecutableVehicleCommandType = {
     Start: 'START',
     Pause: 'PAUSE',
     Resume: 'RESUME',
     Stop: 'STOP',
-    SetSpeed: 'SET_SPEED',
-    IncreaseSpeed: 'INCREASE_SPEED',
-    DecreaseSpeed: 'DECREASE_SPEED',
-    EmergencyBrake: 'EMERGENCY_BRAKE',
 } as const;
-export type VehicleCommandType = typeof VehicleCommandType[keyof typeof VehicleCommandType];
+export type ExecutableVehicleCommandType = typeof ExecutableVehicleCommandType[keyof typeof ExecutableVehicleCommandType];
 

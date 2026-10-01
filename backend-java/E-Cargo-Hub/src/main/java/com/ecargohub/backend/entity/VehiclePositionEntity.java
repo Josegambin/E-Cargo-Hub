@@ -2,7 +2,6 @@ package com.ecargohub.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.OffsetDateTime;
@@ -11,7 +10,6 @@ import java.time.OffsetDateTime;
 @Table(name = "vehicle_positions")
 @Getter
 @Setter
-@NoArgsConstructor
 public class VehiclePositionEntity {
 
     @Id

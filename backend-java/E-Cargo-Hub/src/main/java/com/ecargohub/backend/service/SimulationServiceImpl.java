@@ -30,12 +30,13 @@ public class SimulationServiceImpl implements SimulationService {
     private final SimulationEventPublisher eventPublisher;
 
     public SimulationServiceImpl(SimulationRepository simulationRepository, VehicleRepository vehicleRepository,
-            RouteRepository routeRepository, SimulationMapper simulationMapper) {
+            RouteRepository routeRepository, SimulationMapper simulationMapper,
+            SimulationEventPublisher eventPublisher) {
         this.simulationRepository = simulationRepository;
         this.vehicleRepository = vehicleRepository;
         this.routeRepository = routeRepository;
         this.simulationMapper = simulationMapper;
-        this.eventPublisher = null;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override

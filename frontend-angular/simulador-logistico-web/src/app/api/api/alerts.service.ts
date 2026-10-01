@@ -1,5 +1,5 @@
 /**
- * Simulador Logístico
+ * E-Cargo Hub API
  *
  * Contact: admin@simulador-logistico.local
  *
@@ -39,7 +39,7 @@ export class AlertsService extends BaseService {
 
     /**
      * Obtener alertas
-     * @endpoint get /api/alerts
+     * @endpoint get /api/v1/alerts
      * @param vehicleId 
      * @param simulationId 
      * @param severity 
@@ -106,7 +106,7 @@ export class AlertsService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/alerts`;
+        let localVarPath = `/api/v1/alerts`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Array<VehicleAlert>>('get', `${basePath}${localVarPath}`,
             {

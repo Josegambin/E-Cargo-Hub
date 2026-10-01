@@ -23,6 +23,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.OffsetDateTime;
+import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Map;
 
@@ -119,10 +120,17 @@ public class VehicleController {
             @Parameter(description = "Fecha de inicio (ISO-8601)", example = "2026-09-29T00:00:00Z") @RequestParam(required = false) String from,
             @Parameter(description = "Fecha de fin (ISO-8601)", example = "2026-09-29T23:59:59Z") @RequestParam(required = false) String to) {
 
-        if (from != null && to != null) {
-            OffsetDateTime fromDt = OffsetDateTime.parse(from);
-            OffsetDateTime toDt = OffsetDateTime.parse(to);
-            return ResponseEntity.ok(vehicleTelemetryService.getRange(id, fromDt, toDt));
+        if (from != null || to != null) {
+            try {
+                OffsetDateTime fromDt = from == null ? null : OffsetDateTime.parse(from);
+                OffsetDateTime toDt = to == null ? null : OffsetDateTime.parse(to);
+                if (fromDt != null && toDt != null && fromDt.isAfter(toDt)) {
+                    throw new IllegalArgumentException("'from' must be before or equal to 'to'");
+                }
+                return ResponseEntity.ok(vehicleTelemetryService.getRange(id, fromDt, toDt));
+            } catch (DateTimeParseException ex) {
+                throw new IllegalArgumentException("'from' and 'to' must be ISO-8601 date-times", ex);
+            }
         }
         return ResponseEntity.ok(vehicleTelemetryService.getAll(id));
     }
@@ -132,8 +140,11 @@ public class VehicleController {
     @GetMapping("/{id}/telemetry/latest")
     public ResponseEntity<List<TelemetryPointDto>> getLatestTelemetry(
             @Parameter(description = "ID del vehículo", example = "1") @PathVariable Long id,
-            @Parameter(description = "Número máximo de puntos (max 500)", example = "50") @RequestParam(defaultValue = "50") int limit) {
-        return ResponseEntity.ok(vehicleTelemetryService.getLatest(id, Math.min(limit, 500)));
+            @Parameter(description = "Número máximo de puntos (1-500)", example = "50") @RequestParam(defaultValue = "50") int limit) {
+        if (limit < 1 || limit > 500) {
+            throw new IllegalArgumentException("'limit' must be between 1 and 500");
+        }
+        return ResponseEntity.ok(vehicleTelemetryService.getLatest(id, limit));
     }
 
     @Operation(summary = "Borrar el histórico de telemetría", description = "Elimina todos los puntos de telemetría del vehículo. Útil para pruebas.")

@@ -1,7 +1,7 @@
 openapi: 3.0.3
 
 info:
-  title: Simulador Logístico
+  title: E-Cargo Hub API
   version: 1.0.0
   description: |
     El sistema permite:
@@ -47,6 +47,9 @@ tags:
   - name: Alerts
     description: Alertas generadas durante las simulaciones
 
+  - name: Telemetry
+    description: Histórico de telemetría de vehículos
+
 
 paths:
 
@@ -54,7 +57,7 @@ paths:
   # VEHICLES
   # ============================================================
 
-  /api/vehicles:
+  /api/v1/vehicles:
 
     get:
       tags:
@@ -110,7 +113,7 @@ paths:
           $ref: '#/components/responses/BadRequest'
 
 
-  /api/vehicles/{vehicleId}:
+  /api/v1/vehicles/{vehicleId}:
 
     get:
       tags:
@@ -135,7 +138,6 @@ paths:
 
         '404':
           $ref: '#/components/responses/NotFound'
-
 
     put:
       tags:
@@ -197,7 +199,7 @@ paths:
   # WAREHOUSES
   # ============================================================
 
-  /api/warehouses:
+  /api/v1/warehouses:
 
     get:
       tags:
@@ -250,7 +252,7 @@ paths:
           $ref: '#/components/responses/BadRequest'
 
 
-  /api/warehouses/{warehouseId}:
+  /api/v1/warehouses/{warehouseId}:
 
     get:
       tags:
@@ -337,7 +339,7 @@ paths:
   # ROUTES
   # ============================================================
 
-  /api/routes:
+  /api/v1/routes:
 
     get:
       tags:
@@ -395,7 +397,7 @@ paths:
           $ref: '#/components/responses/BadRequest'
 
 
-  /api/routes/{routeId}:
+  /api/v1/routes/{routeId}:
 
     get:
       tags:
@@ -421,12 +423,30 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+    delete:
+      tags:
+        - Routes
+
+      summary: Eliminar una ruta
+
+      operationId: deleteRoute
+
+      parameters:
+        - $ref: '#/components/parameters/RouteId'
+
+      responses:
+        '204':
+          description: Ruta eliminada
+
+        '404':
+          $ref: '#/components/responses/NotFound'
+
 
   # ============================================================
   # SIMULATIONS
   # ============================================================
 
-  /api/simulations:
+  /api/v1/simulations:
 
     get:
       tags:
@@ -479,7 +499,7 @@ paths:
           $ref: '#/components/responses/BadRequest'
 
 
-  /api/simulations/{simulationId}:
+  /api/v1/simulations/{simulationId}:
 
     get:
       tags:
@@ -506,7 +526,7 @@ paths:
           $ref: '#/components/responses/NotFound'
 
 
-  /api/simulations/{simulationId}/start:
+  /api/v1/simulations/{simulationId}/start:
 
     post:
       tags:
@@ -533,7 +553,7 @@ paths:
           $ref: '#/components/responses/NotFound'
 
 
-  /api/simulations/{simulationId}/pause:
+  /api/v1/simulations/{simulationId}/pause:
 
     post:
       tags:
@@ -557,7 +577,7 @@ paths:
                 $ref: '#/components/schemas/Simulation'
 
 
-  /api/simulations/{simulationId}/resume:
+  /api/v1/simulations/{simulationId}/resume:
 
     post:
       tags:
@@ -581,7 +601,7 @@ paths:
                 $ref: '#/components/schemas/Simulation'
 
 
-  /api/simulations/{simulationId}/stop:
+  /api/v1/simulations/{simulationId}/stop:
 
     post:
       tags:
@@ -609,7 +629,7 @@ paths:
   # VEHICLE COMMANDS
   # ============================================================
 
-  /api/vehicles/{vehicleId}/commands:
+  /api/v1/vehicles/{vehicleId}/commands:
 
     post:
       tags:
@@ -639,8 +659,8 @@ paths:
 
       responses:
 
-        '202':
-          description: Comando aceptado
+        '200':
+          description: Comando guardado y publicado
 
           content:
             application/json:
@@ -653,12 +673,36 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+    get:
+      tags:
+        - Commands
+
+      summary: Obtener el historial de comandos de un vehículo
+
+      operationId: getVehicleCommandHistory
+
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+
+      responses:
+        '200':
+          description: Historial de comandos, ordenado del más reciente al más antiguo
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VehicleCommand'
+
 
   # ============================================================
   # POSITIONS
   # ============================================================
 
-  /api/vehicles/{vehicleId}/position:
+  /api/v1/vehicles/{vehicleId}/position:
 
     get:
       tags:
@@ -683,13 +727,138 @@ paths:
 
         '404':
           $ref: '#/components/responses/NotFound'
+          
+    # ============================================================
+  # TELEMETRY
+  # ============================================================
+
+  /api/v1/vehicles/{vehicleId}/status:
+    get:
+      tags:
+        - Vehicles
+
+      summary: Obtener el estado actual del vehículo
+
+      operationId: getVehicleStatus
+
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+
+      responses:
+        '200':
+          description: Estado actual, o estado IDLE si aún no hay datos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleStatusDto'
+
+  /api/v1/vehicles/{vehicleId}/telemetry:
+
+    get:
+      tags:
+        - Telemetry
+
+      summary: Obtener histórico completo de telemetría
+
+      operationId: getVehicleTelemetry
+
+      description: |
+        Devuelve todos los puntos de telemetría registrados para el vehículo,
+        ordenados cronológicamente. Se puede filtrar opcionalmente desde, hasta,
+        o por ambos límites de fecha.
+
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+
+        - name: from
+          in: query
+          required: false
+          description: Fecha de inicio (ISO-8601)
+          schema:
+            type: string
+            format: date-time
+
+        - name: to
+          in: query
+          required: false
+          description: Fecha de fin (ISO-8601)
+          schema:
+            type: string
+            format: date-time
+
+      responses:
+
+        '200':
+          description: Lista de puntos de telemetría
+
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TelemetryPoint'
+
+    delete:
+      tags:
+        - Telemetry
+
+      summary: Borrar el histórico de telemetría
+
+      operationId: clearVehicleTelemetry
+
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+
+      responses:
+        '200':
+          description: Número de puntos eliminados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TelemetryClearResult'
+
+  /api/v1/vehicles/{vehicleId}/telemetry/latest:
+
+    get:
+      tags:
+        - Telemetry
+
+      summary: Obtener los últimos N puntos de telemetría
+
+      operationId: getLatestVehicleTelemetry
+
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+
+        - name: limit
+          in: query
+          required: false
+          description: Número de puntos a devolver (entre 1 y 500)
+          schema:
+            type: integer
+            default: 50
+            minimum: 1
+            maximum: 500
+
+      responses:
+
+        '200':
+          description: Lista de puntos recientes
+
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/TelemetryPoint'
+
 
 
   # ============================================================
   # ALERTS
   # ============================================================
 
-  /api/alerts:
+  /api/v1/alerts:
 
     get:
       tags:
@@ -833,7 +1002,9 @@ components:
           $ref: '#/components/schemas/VehicleStatus'
 
         currentPosition:
-          $ref: '#/components/schemas/VehiclePosition'
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/VehiclePosition'
 
 
     CreateVehicleRequest:
@@ -905,6 +1076,55 @@ components:
         - STOPPED
         - ERROR
 
+    VehicleStatusDto:
+      type: object
+
+      required:
+        - vehicleId
+        - progress
+        - speedKmh
+        - status
+
+      properties:
+
+        vehicleId:
+          type: integer
+          format: int64
+
+        latitude:
+          type: number
+          format: double
+          nullable: true
+          minimum: -90
+          maximum: 90
+
+        longitude:
+          type: number
+          format: double
+          nullable: true
+          minimum: -180
+          maximum: 180
+
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+
+        speedKmh:
+          type: number
+          format: double
+          minimum: 0
+
+        status:
+          type: string
+          description: Estado actual del vehículo
+          example: IDLE
+
+        updatedAt:
+          type: string
+          format: date-time
+          nullable: true
+
 
     # ------------------------------------------------------------
     # WAREHOUSE
@@ -930,6 +1150,7 @@ components:
 
         address:
           type: string
+          nullable: true
           example: Avenida de Elche 25, Alicante
 
         location:
@@ -992,8 +1213,6 @@ components:
         - name
         - origin
         - destination
-        - distanceMeters
-        - durationSeconds
         - status
 
       properties:
@@ -1015,18 +1234,22 @@ components:
         distanceMeters:
           type: number
           format: double
+          nullable: true
           example: 425000
 
         durationSeconds:
           type: integer
           format: int64
+          nullable: true
           example: 14400
 
         status:
           $ref: '#/components/schemas/RouteStatus'
 
         geometry:
-          $ref: '#/components/schemas/GeoLineString'
+          nullable: true
+          allOf:
+            - $ref: '#/components/schemas/GeoLineString'
 
 
     CreateRouteRequest:
@@ -1099,14 +1322,17 @@ components:
         startedAt:
           type: string
           format: date-time
+          nullable: true
 
         finishedAt:
           type: string
           format: date-time
+          nullable: true
 
         simulationSpeed:
           type: number
           format: double
+          nullable: true
           minimum: 0
           example: 1
 
@@ -1216,6 +1442,78 @@ components:
           type: string
           format: date-time
 
+    TelemetryPoint:
+      type: object
+
+      required:
+        - id
+        - vehicleId
+        - latitude
+        - longitude
+        - progress
+        - speedKmh
+        - status
+        - recordedAt
+
+      properties:
+
+        id:
+          type: integer
+          format: int64
+          example: 1234
+
+        vehicleId:
+          type: integer
+          format: int64
+          example: 1
+
+        latitude:
+          type: number
+          format: double
+          minimum: -90
+          maximum: 90
+          example: 38.3452
+
+        longitude:
+          type: number
+          format: double
+          minimum: -180
+          maximum: 180
+          example: -0.4810
+
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+          example: 45
+
+        speedKmh:
+          type: number
+          format: double
+          minimum: 0
+          example: 87.5
+
+        status:
+          type: string
+          example: EN_RUTA
+
+        recordedAt:
+          type: string
+          format: date-time
+          example: '2026-09-30T14:30:00Z'
+
+    TelemetryClearResult:
+      type: object
+      required:
+        - vehicleId
+        - deleted
+      properties:
+        vehicleId:
+          type: integer
+          format: int64
+        deleted:
+          type: integer
+          format: int64
 
     # ------------------------------------------------------------
     # COMMANDS
@@ -1230,15 +1528,44 @@ components:
       properties:
 
         command:
-          $ref: '#/components/schemas/VehicleCommandType'
+          $ref: '#/components/schemas/ExecutableVehicleCommandType'
 
         value:
           type: number
           format: double
+          nullable: true
           description: |
             Valor asociado al comando.
             Por ejemplo, velocidad objetivo para SET_SPEED.
           example: 80
+
+        originLat:
+          type: number
+          format: double
+          nullable: true
+          minimum: -90
+          maximum: 90
+
+        originLon:
+          type: number
+          format: double
+          nullable: true
+          minimum: -180
+          maximum: 180
+
+        destLat:
+          type: number
+          format: double
+          nullable: true
+          minimum: -90
+          maximum: 90
+
+        destLon:
+          type: number
+          format: double
+          nullable: true
+          minimum: -180
+          maximum: 180
 
 
     VehicleCommand:
@@ -1256,6 +1583,11 @@ components:
           type: integer
           format: int64
 
+        commandId:
+          type: string
+          format: uuid
+          nullable: true
+
         vehicleId:
           type: integer
           format: int64
@@ -1266,6 +1598,27 @@ components:
         value:
           type: number
           format: double
+          nullable: true
+
+        originLat:
+          type: number
+          format: double
+          nullable: true
+
+        originLon:
+          type: number
+          format: double
+          nullable: true
+
+        destLat:
+          type: number
+          format: double
+          nullable: true
+
+        destLon:
+          type: number
+          format: double
+          nullable: true
 
         createdAt:
           type: string
@@ -1284,6 +1637,15 @@ components:
         - INCREASE_SPEED
         - DECREASE_SPEED
         - EMERGENCY_BRAKE
+
+    ExecutableVehicleCommandType:
+      type: string
+      description: Comandos actualmente soportados por el backend
+      enum:
+        - START
+        - PAUSE
+        - RESUME
+        - STOP
 
 
     # ------------------------------------------------------------
@@ -1457,7 +1819,7 @@ components:
 
         path:
           type: string
-          example: /api/vehicles/10
+          example: /api/v1/vehicles/10
 
 
   # ============================================================
@@ -1477,6 +1839,14 @@ components:
 
     NotFound:
       description: Recurso no encontrado
+
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiError'
+
+    Conflict:
+      description: Conflicto con el estado actual del recurso
 
       content:
         application/json:

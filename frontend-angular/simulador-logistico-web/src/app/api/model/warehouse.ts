@@ -1,5 +1,5 @@
 /**
- * Simulador Logístico
+ * E-Cargo Hub API
  *
  * Contact: admin@simulador-logistico.local
  *
@@ -13,7 +13,7 @@ import { GeoPoint } from './geoPoint';
 export interface Warehouse { 
     id: number;
     name: string;
-    address?: string;
+    address?: string | null;
     location: GeoPoint;
 }
 

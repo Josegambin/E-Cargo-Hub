@@ -54,9 +54,13 @@ Todos los errores devuelven el mismo formato JSON:
 
 ### 1.6. Autenticación
 
-**Estado actual:** sin autenticación (solo HTTP Basic opcional con `admin/admin123`).
+**Estado actual:** no se exige autenticación. No exponer este estado en producción sin configurar autenticación.
 
-**Estado planificado:** JWT en header `Authorization: Bearer <token>`.
+### Modelos y entidades
+
+Los cuerpos REST están formados por DTO, no por entidades JPA. Las entidades son internas del backend y no deben consumirse desde Angular. El contrato OpenAPI mantenido en [`openapi/openapi.yaml`](../openapi/openapi.yaml) es la fuente única para los DTO HTTP y genera los modelos y servicios Angular mediante `npm run generate:api`.
+
+La referencia OpenAPI contiene el listado completo de endpoints, campos, tipos, validaciones y respuestas. Esta página resume los flujos principales.
 
 ---
 
@@ -76,13 +80,19 @@ Devuelve la lista completa de vehículos.
 [
   {
     "id": 1,
-    "name": "Vehículo 1",
-    "plate": "1234-ABC"
+    "name": "TRUCK-001",
+    "type": "TRUCK",
+    "maxSpeed": 120,
+    "status": "IDLE",
+    "currentPosition": null
   },
   {
     "id": 2,
-    "name": "Vehículo 2",
-    "plate": "5678-DEF"
+    "name": "VAN-001",
+    "type": "VAN",
+    "maxSpeed": 100,
+    "status": "IDLE",
+    "currentPosition": null
   }
 ]
 ```
@@ -95,7 +105,7 @@ curl http://localhost:8081/api/v1/vehicles
 
 ---
 
-#### `GET /api/v1/vehicles/{id}`
+#### `GET /api/v1/vehicles/{vehicleId}`
 
 Devuelve un vehículo por su ID.
 
@@ -107,8 +117,11 @@ Devuelve un vehículo por su ID.
 ```json
 {
   "id": 1,
-  "name": "Vehículo 1",
-  "plate": "1234-ABC"
+  "name": "TRUCK-001",
+  "type": "TRUCK",
+  "maxSpeed": 120,
+  "status": "IDLE",
+  "currentPosition": null
 }
 ```
 
@@ -134,8 +147,9 @@ Crea un vehículo nuevo.
 
 ```json
 {
-  "name": "Vehículo 3",
-  "plate": "9012-GHI"
+  "name": "TRUCK-003",
+  "type": "TRUCK",
+  "maxSpeed": 120
 }
 ```
 
@@ -144,14 +158,17 @@ Crea un vehículo nuevo.
 ```json
 {
   "id": 3,
-  "name": "Vehículo 3",
-  "plate": "9012-GHI"
+  "name": "TRUCK-003",
+  "type": "TRUCK",
+  "maxSpeed": 120,
+  "status": "IDLE",
+  "currentPosition": null
 }
 ```
 
 ---
 
-#### `PUT /api/v1/vehicles/{id}`
+#### `PUT /api/v1/vehicles/{vehicleId}`
 
 Actualiza un vehículo existente.
 
@@ -159,8 +176,9 @@ Actualiza un vehículo existente.
 
 ```json
 {
-  "name": "Vehículo 3 (renombrado)",
-  "plate": "9012-GHI"
+  "name": "TRUCK-003",
+  "type": "TRUCK",
+  "maxSpeed": 110
 }
 ```
 
@@ -169,14 +187,17 @@ Actualiza un vehículo existente.
 ```json
 {
   "id": 3,
-  "name": "Vehículo 3 (renombrado)",
-  "plate": "9012-GHI"
+  "name": "TRUCK-003",
+  "type": "TRUCK",
+  "maxSpeed": 110,
+  "status": "IDLE",
+  "currentPosition": null
 }
 ```
 
 ---
 
-#### `DELETE /api/v1/vehicles/{id}`
+#### `DELETE /api/v1/vehicles/{vehicleId}`
 
 Elimina un vehículo.
 
@@ -186,7 +207,7 @@ Elimina un vehículo.
 
 ### 2.2. Estado del vehículo
 
-#### `GET /api/v1/vehicles/{id}/status`
+#### `GET /api/v1/vehicles/{vehicleId}/status`
 
 Devuelve el estado actual del vehículo (última posición conocida).
 
@@ -222,7 +243,7 @@ Devuelve el estado actual del vehículo (última posición conocida).
 
 ### 2.3. Telemetría
 
-#### `GET /api/v1/vehicles/{id}/telemetry`
+#### `GET /api/v1/vehicles/{vehicleId}/telemetry`
 
 Devuelve el histórico completo de telemetría del vehículo.
 
@@ -230,8 +251,8 @@ Devuelve el histórico completo de telemetría del vehículo.
 
 | Param | Tipo | Descripción |
 |---|---|---|
-| `from` | ISO-8601 | Fecha de inicio (inclusive) |
-| `to` | ISO-8601 | Fecha de fin (inclusive) |
+| `from` | ISO-8601 | Fecha inicial inclusive; se puede enviar sin `to` |
+| `to` | ISO-8601 | Fecha final inclusive; se puede enviar sin `from` |
 
 **Respuesta 200:**
 
@@ -268,7 +289,7 @@ curl "http://localhost:8081/api/v1/vehicles/1/telemetry?from=2026-09-30T00:00:00
 
 ---
 
-#### `GET /api/v1/vehicles/{id}/telemetry/latest`
+#### `GET /api/v1/vehicles/{vehicleId}/telemetry/latest`
 
 Devuelve los últimos N puntos de telemetría.
 
@@ -276,13 +297,13 @@ Devuelve los últimos N puntos de telemetría.
 
 | Param | Tipo | Default | Descripción |
 |---|---|---|---|
-| `limit` | int | 50 | Número máximo de puntos (max 500) |
+| `limit` | int | 50 | Número de puntos, entre 1 y 500 |
 
 **Respuesta 200:** igual que el endpoint anterior.
 
 ---
 
-#### `DELETE /api/v1/vehicles/{id}/telemetry`
+#### `DELETE /api/v1/vehicles/{vehicleId}/telemetry`
 
 Borra todo el histórico de telemetría del vehículo.
 
@@ -299,7 +320,7 @@ Borra todo el histórico de telemetría del vehículo.
 
 ### 2.4. Comandos
 
-#### `POST /api/v1/vehicle-commands/vehicle/{vehicleId}`
+#### `POST /api/v1/vehicles/{vehicleId}/commands`
 
 Envía un comando a un vehículo.
 
@@ -393,7 +414,7 @@ Envía un comando a un vehículo.
 
 ---
 
-#### `GET /api/v1/vehicle-commands/vehicle/{vehicleId}`
+#### `GET /api/v1/vehicles/{vehicleId}/commands`
 
 Devuelve el historial de comandos del vehículo.
 
@@ -415,6 +436,22 @@ Devuelve el historial de comandos del vehículo.
   }
 ]
 ```
+
+---
+
+### 2.5. Resto de recursos REST
+
+Todos estos endpoints están descritos con sus DTO, parámetros, validaciones y errores en el contrato OpenAPI.
+
+| Recurso | Operaciones |
+|---|---|
+| Almacenes | `GET/POST /api/v1/warehouses`, `GET/PUT/DELETE /api/v1/warehouses/{warehouseId}` |
+| Rutas | `GET/POST /api/v1/routes`, `GET/DELETE /api/v1/routes/{routeId}` |
+| Simulaciones | `GET/POST /api/v1/simulations`, `GET /api/v1/simulations/{simulationId}`, y `POST /api/v1/simulations/{simulationId}/{start|pause|resume|stop}` |
+| Posición | `GET /api/v1/vehicles/{vehicleId}/position` |
+| Alertas | `GET /api/v1/alerts?vehicleId={id}&simulationId={id}&severity={INFO|WARNING|CRITICAL}` |
+
+Las tres condiciones de `GET /api/v1/alerts` se pueden combinar; si se envían varias, se aplican conjuntamente.
 
 ---
 
@@ -566,11 +603,11 @@ client.activate();
 **Generación de cliente TypeScript:**
 
 ```bash
-npx @openapitools/openapi-generator-cli generate \
-  -i http://localhost:8081/v3/api-docs \
-  -g typescript-angular \
-  -o ./src/app/api
+cd frontend-angular/simulador-logistico-web
+npm run generate:api
 ```
+
+El comando usa la especificación versionada `openapi/openapi.yaml`; no depende de que el backend esté ejecutándose.
 
 ---
 

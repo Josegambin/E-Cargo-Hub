@@ -5,7 +5,7 @@ import com.ecargohub.backend.interfaces.VehiclePositionService;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping("/api/vehicles/{vehicleId}/position")
+@RequestMapping("/api/v1/vehicles/{vehicleId}/position")
 public class VehiclePositionController {
 
     private final VehiclePositionService positionService;

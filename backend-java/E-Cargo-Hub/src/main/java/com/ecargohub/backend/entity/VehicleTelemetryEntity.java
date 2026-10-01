@@ -2,7 +2,6 @@ package com.ecargohub.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.OffsetDateTime;
@@ -12,7 +11,6 @@ import java.time.OffsetDateTime;
         @Index(name = "idx_telemetry_vehicle_time", columnList = "vehicle_id, recorded_at DESC") })
 @Getter
 @Setter
-@NoArgsConstructor
 public class VehicleTelemetryEntity {
 
     @Id

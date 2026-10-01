@@ -1,5 +1,5 @@
 /**
- * Simulador Logístico
+ * E-Cargo Hub API
  *
  * Contact: admin@simulador-logistico.local
  *
@@ -12,9 +12,14 @@ import { VehicleCommandType } from './vehicleCommandType';
 
 export interface VehicleCommand { 
     id: number;
+    commandId?: string | null;
     vehicleId: number;
     command: VehicleCommandType;
-    value?: number;
+    value?: number | null;
+    originLat?: number | null;
+    originLon?: number | null;
+    destLat?: number | null;
+    destLon?: number | null;
     createdAt: string;
 }
 export namespace VehicleCommand {

@@ -19,4 +19,10 @@ public interface VehicleAlertRepository extends JpaRepository<VehicleAlertEntity
 
     List<VehicleAlertEntity> findByVehicleIdAndSimulationIdAndSeverity(Long vehicleId, Long simulationId,
             AlertSeverityEnum severity);
+
+    List<VehicleAlertEntity> findByVehicleIdAndSimulationId(Long vehicleId, Long simulationId);
+
+    List<VehicleAlertEntity> findByVehicleIdAndSeverity(Long vehicleId, AlertSeverityEnum severity);
+
+    List<VehicleAlertEntity> findBySimulationIdAndSeverity(Long simulationId, AlertSeverityEnum severity);
 }

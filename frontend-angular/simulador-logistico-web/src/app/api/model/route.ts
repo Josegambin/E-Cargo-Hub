@@ -1,5 +1,5 @@
 /**
- * Simulador Logístico
+ * E-Cargo Hub API
  *
  * Contact: admin@simulador-logistico.local
  *
@@ -17,10 +17,10 @@ export interface Route {
     name: string;
     origin: GeoPoint;
     destination: GeoPoint;
-    distanceMeters: number;
-    durationSeconds: number;
+    distanceMeters?: number | null;
+    durationSeconds?: number | null;
     status: RouteStatus;
-    geometry?: GeoLineString;
+    geometry?: GeoLineString | null;
 }
 export namespace Route {
 }

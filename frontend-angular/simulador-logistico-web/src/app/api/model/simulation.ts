@@ -1,5 +1,5 @@
 /**
- * Simulador Logístico
+ * E-Cargo Hub API
  *
  * Contact: admin@simulador-logistico.local
  *
@@ -16,9 +16,9 @@ export interface Simulation {
     vehicleId: number;
     routeId: number;
     status: SimulationStatus;
-    startedAt?: string;
-    finishedAt?: string;
-    simulationSpeed?: number;
+    startedAt?: string | null;
+    finishedAt?: string | null;
+    simulationSpeed?: number | null;
 }
 export namespace Simulation {
 }

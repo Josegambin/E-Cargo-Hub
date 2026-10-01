@@ -9,10 +9,14 @@
  */
 
 
-export const VehicleType = {
-    Car: 'CAR',
-    Van: 'VAN',
-    Truck: 'TRUCK',
-} as const;
-export type VehicleType = typeof VehicleType[keyof typeof VehicleType];
+export interface TelemetryPoint { 
+    id: number;
+    vehicleId: number;
+    latitude: number;
+    longitude: number;
+    progress: number;
+    speedKmh: number;
+    status: string;
+    recordedAt: string;
+}
 

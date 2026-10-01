@@ -1,5 +1,5 @@
 /**
- * Simulador Logístico
+ * E-Cargo Hub API
  *
  * Contact: admin@simulador-logistico.local
  *
@@ -41,7 +41,7 @@ export class SimulationsService extends BaseService {
 
     /**
      * Crear simulación
-     * @endpoint post /api/simulations
+     * @endpoint post /api/v1/simulations
      * @param createSimulationRequest 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -89,7 +89,7 @@ export class SimulationsService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/simulations`;
+        let localVarPath = `/api/v1/simulations`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Simulation>('post', `${basePath}${localVarPath}`,
             {
@@ -107,7 +107,7 @@ export class SimulationsService extends BaseService {
 
     /**
      * Obtener simulación
-     * @endpoint get /api/simulations/{simulationId}
+     * @endpoint get /api/v1/simulations/{simulationId}
      * @param simulationId Identificador de la simulación
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -146,7 +146,7 @@ export class SimulationsService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/simulations/${this.configuration.encodeParam({name: "simulationId", value: simulationId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}`;
+        let localVarPath = `/api/v1/simulations/${this.configuration.encodeParam({name: "simulationId", value: simulationId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Simulation>('get', `${basePath}${localVarPath}`,
             {
@@ -163,7 +163,7 @@ export class SimulationsService extends BaseService {
 
     /**
      * Obtener simulaciones
-     * @endpoint get /api/simulations
+     * @endpoint get /api/v1/simulations
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
@@ -198,7 +198,7 @@ export class SimulationsService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/simulations`;
+        let localVarPath = `/api/v1/simulations`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Array<Simulation>>('get', `${basePath}${localVarPath}`,
             {
@@ -215,7 +215,7 @@ export class SimulationsService extends BaseService {
 
     /**
      * Pausar simulación
-     * @endpoint post /api/simulations/{simulationId}/pause
+     * @endpoint post /api/v1/simulations/{simulationId}/pause
      * @param simulationId Identificador de la simulación
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -254,7 +254,7 @@ export class SimulationsService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/simulations/${this.configuration.encodeParam({name: "simulationId", value: simulationId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/pause`;
+        let localVarPath = `/api/v1/simulations/${this.configuration.encodeParam({name: "simulationId", value: simulationId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/pause`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Simulation>('post', `${basePath}${localVarPath}`,
             {
@@ -271,7 +271,7 @@ export class SimulationsService extends BaseService {
 
     /**
      * Reanudar simulación
-     * @endpoint post /api/simulations/{simulationId}/resume
+     * @endpoint post /api/v1/simulations/{simulationId}/resume
      * @param simulationId Identificador de la simulación
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -310,7 +310,7 @@ export class SimulationsService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/simulations/${this.configuration.encodeParam({name: "simulationId", value: simulationId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/resume`;
+        let localVarPath = `/api/v1/simulations/${this.configuration.encodeParam({name: "simulationId", value: simulationId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/resume`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Simulation>('post', `${basePath}${localVarPath}`,
             {
@@ -327,7 +327,7 @@ export class SimulationsService extends BaseService {
 
     /**
      * Iniciar simulación
-     * @endpoint post /api/simulations/{simulationId}/start
+     * @endpoint post /api/v1/simulations/{simulationId}/start
      * @param simulationId Identificador de la simulación
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -366,7 +366,7 @@ export class SimulationsService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/simulations/${this.configuration.encodeParam({name: "simulationId", value: simulationId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/start`;
+        let localVarPath = `/api/v1/simulations/${this.configuration.encodeParam({name: "simulationId", value: simulationId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/start`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Simulation>('post', `${basePath}${localVarPath}`,
             {
@@ -383,7 +383,7 @@ export class SimulationsService extends BaseService {
 
     /**
      * Detener simulación
-     * @endpoint post /api/simulations/{simulationId}/stop
+     * @endpoint post /api/v1/simulations/{simulationId}/stop
      * @param simulationId Identificador de la simulación
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -422,7 +422,7 @@ export class SimulationsService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/simulations/${this.configuration.encodeParam({name: "simulationId", value: simulationId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/stop`;
+        let localVarPath = `/api/v1/simulations/${this.configuration.encodeParam({name: "simulationId", value: simulationId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/stop`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Simulation>('post', `${basePath}${localVarPath}`,
             {

@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1/vehicle-commands")
+@RequestMapping("/api/v1/vehicles/{vehicleId}/commands")
 @Tag(name = "Comandos", description = "Envío de comandos a vehículos (START, PAUSE, RESUME, STOP)")
 public class VehicleCommandController {
 
@@ -54,7 +54,7 @@ public class VehicleCommandController {
             @ApiResponse(responseCode = "400", description = "Datos inválidos (coordenadas fuera de rango o comando nulo)", content = @Content(schema = @Schema(hidden = true))),
             @ApiResponse(responseCode = "404", description = "Vehículo no encontrado", content = @Content(schema = @Schema(hidden = true))),
             @ApiResponse(responseCode = "409", description = "Conflicto: el comando no es válido para el estado actual del vehículo", content = @Content(schema = @Schema(hidden = true))) })
-    @PostMapping("/vehicle/{vehicleId}")
+    @PostMapping
     public ResponseEntity<VehicleCommandDto> dispatchCommand(
             @Parameter(description = "ID del vehículo", example = "1") @PathVariable Long vehicleId,
             @Valid @RequestBody VehicleCommandRequest request) {
@@ -63,7 +63,7 @@ public class VehicleCommandController {
 
     @Operation(summary = "Obtener el historial de comandos de un vehículo", description = "Devuelve todos los comandos enviados al vehículo, ordenados por fecha descendente.")
     @ApiResponse(responseCode = "200", description = "Historial de comandos")
-    @GetMapping("/vehicle/{vehicleId}")
+    @GetMapping
     public ResponseEntity<List<VehicleCommandDto>> getVehicleCommandHistory(
             @Parameter(description = "ID del vehículo", example = "1") @PathVariable Long vehicleId) {
         List<VehicleCommandDto> history = commandRepository.findByVehicleIdOrderByCreatedAtDesc(vehicleId).stream()

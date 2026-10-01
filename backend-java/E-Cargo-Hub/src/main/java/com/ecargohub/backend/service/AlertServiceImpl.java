@@ -23,15 +23,16 @@ public class AlertServiceImpl implements AlertService {
     private final VehicleRepository vehicleRepository;
     private final SimulationRepository simulationRepository;
     private final AlertMapper alertMapper;
-    private final SimulationEventPublisher eventPublisher; // ← CAMPO
+    private final SimulationEventPublisher eventPublisher;
 
     public AlertServiceImpl(VehicleAlertRepository alertRepository, VehicleRepository vehicleRepository,
-            SimulationRepository simulationRepository, AlertMapper alertMapper) {
+            SimulationRepository simulationRepository, AlertMapper alertMapper,
+            SimulationEventPublisher eventPublisher) {
         this.alertRepository = alertRepository;
         this.vehicleRepository = vehicleRepository;
         this.simulationRepository = simulationRepository;
         this.alertMapper = alertMapper;
-        this.eventPublisher = null;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override
@@ -41,6 +42,12 @@ public class AlertServiceImpl implements AlertService {
 
         if (vehicleId != null && simulationId != null && severity != null) {
             result = alertRepository.findByVehicleIdAndSimulationIdAndSeverity(vehicleId, simulationId, severity);
+        } else if (vehicleId != null && simulationId != null) {
+            result = alertRepository.findByVehicleIdAndSimulationId(vehicleId, simulationId);
+        } else if (vehicleId != null && severity != null) {
+            result = alertRepository.findByVehicleIdAndSeverity(vehicleId, severity);
+        } else if (simulationId != null && severity != null) {
+            result = alertRepository.findBySimulationIdAndSeverity(simulationId, severity);
         } else if (vehicleId != null) {
             result = alertRepository.findByVehicleId(vehicleId);
         } else if (simulationId != null) {

@@ -1,5 +1,5 @@
 /**
- * Simulador Logístico
+ * E-Cargo Hub API
  *
  * Contact: admin@simulador-logistico.local
  *
@@ -43,7 +43,7 @@ export class WarehousesService extends BaseService {
 
     /**
      * Crear almacén
-     * @endpoint post /api/warehouses
+     * @endpoint post /api/v1/warehouses
      * @param createWarehouseRequest 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -91,7 +91,7 @@ export class WarehousesService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/warehouses`;
+        let localVarPath = `/api/v1/warehouses`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Warehouse>('post', `${basePath}${localVarPath}`,
             {
@@ -109,7 +109,7 @@ export class WarehousesService extends BaseService {
 
     /**
      * Eliminar almacén
-     * @endpoint delete /api/warehouses/{warehouseId}
+     * @endpoint delete /api/v1/warehouses/{warehouseId}
      * @param warehouseId Identificador del almacén
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -148,7 +148,7 @@ export class WarehousesService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/warehouses/${this.configuration.encodeParam({name: "warehouseId", value: warehouseId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}`;
+        let localVarPath = `/api/v1/warehouses/${this.configuration.encodeParam({name: "warehouseId", value: warehouseId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<any>('delete', `${basePath}${localVarPath}`,
             {
@@ -165,7 +165,7 @@ export class WarehousesService extends BaseService {
 
     /**
      * Obtener almacén
-     * @endpoint get /api/warehouses/{warehouseId}
+     * @endpoint get /api/v1/warehouses/{warehouseId}
      * @param warehouseId Identificador del almacén
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
@@ -204,7 +204,7 @@ export class WarehousesService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/warehouses/${this.configuration.encodeParam({name: "warehouseId", value: warehouseId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}`;
+        let localVarPath = `/api/v1/warehouses/${this.configuration.encodeParam({name: "warehouseId", value: warehouseId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Warehouse>('get', `${basePath}${localVarPath}`,
             {
@@ -221,7 +221,7 @@ export class WarehousesService extends BaseService {
 
     /**
      * Obtener almacenes
-     * @endpoint get /api/warehouses
+     * @endpoint get /api/v1/warehouses
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
      * @param reportProgress flag to report request and response progress.
      * @param options additional options
@@ -256,7 +256,7 @@ export class WarehousesService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/warehouses`;
+        let localVarPath = `/api/v1/warehouses`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Array<Warehouse>>('get', `${basePath}${localVarPath}`,
             {
@@ -273,7 +273,7 @@ export class WarehousesService extends BaseService {
 
     /**
      * Actualizar almacén
-     * @endpoint put /api/warehouses/{warehouseId}
+     * @endpoint put /api/v1/warehouses/{warehouseId}
      * @param warehouseId Identificador del almacén
      * @param updateWarehouseRequest 
      * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
@@ -325,7 +325,7 @@ export class WarehousesService extends BaseService {
             }
         }
 
-        let localVarPath = `/api/warehouses/${this.configuration.encodeParam({name: "warehouseId", value: warehouseId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}`;
+        let localVarPath = `/api/v1/warehouses/${this.configuration.encodeParam({name: "warehouseId", value: warehouseId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<Warehouse>('put', `${basePath}${localVarPath}`,
             {

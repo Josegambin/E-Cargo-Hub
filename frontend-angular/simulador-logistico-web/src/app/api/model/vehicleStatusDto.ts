@@ -9,14 +9,16 @@
  */
 
 
-export interface VehiclePosition { 
+export interface VehicleStatusDto { 
     vehicleId: number;
-    latitude: number;
-    longitude: number;
-    speed: number;
-    speedLimit?: number;
-    acceleration?: number;
-    heading: number;
-    timestamp: string;
+    latitude?: number | null;
+    longitude?: number | null;
+    progress: number;
+    speedKmh: number;
+    /**
+     * Estado actual del vehículo
+     */
+    status: string;
+    updatedAt?: string | null;
 }
 

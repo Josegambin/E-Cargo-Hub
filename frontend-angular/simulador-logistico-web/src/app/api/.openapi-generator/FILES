@@ -1,5 +1,4 @@
 .gitignore
-.openapi-generator-ignore
 README.md
 api.base.service.ts
 api.module.ts
@@ -9,6 +8,7 @@ api/commands.service.ts
 api/positions.service.ts
 api/routes.service.ts
 api/simulations.service.ts
+api/telemetry.service.ts
 api/vehicles.service.ts
 api/warehouses.service.ts
 configuration.ts
@@ -22,6 +22,7 @@ model/createRouteRequest.ts
 model/createSimulationRequest.ts
 model/createVehicleRequest.ts
 model/createWarehouseRequest.ts
+model/executableVehicleCommandType.ts
 model/geoLineString.ts
 model/geoPoint.ts
 model/models.ts
@@ -29,6 +30,8 @@ model/route.ts
 model/routeStatus.ts
 model/simulation.ts
 model/simulationStatus.ts
+model/telemetryClearResult.ts
+model/telemetryPoint.ts
 model/updateVehicleRequest.ts
 model/updateWarehouseRequest.ts
 model/vehicle.ts
@@ -38,6 +41,7 @@ model/vehicleCommandRequest.ts
 model/vehicleCommandType.ts
 model/vehiclePosition.ts
 model/vehicleStatus.ts
+model/vehicleStatusDto.ts
 model/vehicleType.ts
 model/warehouse.ts
 param.ts

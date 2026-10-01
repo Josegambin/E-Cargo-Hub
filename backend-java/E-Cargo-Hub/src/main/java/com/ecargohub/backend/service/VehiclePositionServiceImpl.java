@@ -20,14 +20,14 @@ public class VehiclePositionServiceImpl implements VehiclePositionService {
     private final VehiclePositionRepository positionRepository;
     private final VehicleRepository vehicleRepository;
     private final PositionMapper positionMapper;
-    private final SimulationEventPublisher eventPublisher; // ← CAMPO
+    private final SimulationEventPublisher eventPublisher;
 
     public VehiclePositionServiceImpl(VehiclePositionRepository positionRepository, VehicleRepository vehicleRepository,
-            PositionMapper positionMapper) {
+            PositionMapper positionMapper, SimulationEventPublisher eventPublisher) {
         this.positionRepository = positionRepository;
         this.vehicleRepository = vehicleRepository;
         this.positionMapper = positionMapper;
-        this.eventPublisher = null;
+        this.eventPublisher = eventPublisher;
     }
 
     @Override

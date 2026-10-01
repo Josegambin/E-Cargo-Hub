@@ -2,7 +2,6 @@ package com.ecargohub.backend.entity;
 
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.OffsetDateTime;
@@ -14,7 +13,6 @@ import com.ecargohub.backend.domain.enums.VehicleCommandTypeEnum;
 @Table(name = "vehicle_commands", uniqueConstraints = @UniqueConstraint(name = "uk_command_id", columnNames = "command_id"))
 @Getter
 @Setter
-@NoArgsConstructor
 public class VehicleCommandEntity {
 
     @Id

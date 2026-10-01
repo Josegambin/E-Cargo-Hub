@@ -47,8 +47,19 @@ public class VehicleTelemetryService {
 
     @Transactional(readOnly = true)
     public List<TelemetryPointDto> getRange(Long vehicleId, OffsetDateTime from, OffsetDateTime to) {
-        return repository.findByVehicleIdAndRecordedAtBetweenOrderByRecordedAtAsc(vehicleId, from, to).stream()
-                .map(this::toDto).toList();
+        if (from != null && to != null) {
+            return repository.findByVehicleIdAndRecordedAtBetweenOrderByRecordedAtAsc(vehicleId, from, to).stream()
+                    .map(this::toDto).toList();
+        }
+        if (from != null) {
+            return repository.findByVehicleIdAndRecordedAtGreaterThanEqualOrderByRecordedAtAsc(vehicleId, from).stream()
+                    .map(this::toDto).toList();
+        }
+        if (to != null) {
+            return repository.findByVehicleIdAndRecordedAtLessThanEqualOrderByRecordedAtAsc(vehicleId, to).stream()
+                    .map(this::toDto).toList();
+        }
+        throw new IllegalArgumentException("At least one telemetry range boundary must be provided");
     }
 
     @Transactional(readOnly = true)

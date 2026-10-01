@@ -3,14 +3,12 @@ package com.ecargohub.backend.entity;
 import com.ecargohub.backend.domain.enums.RouteStatusEnum;
 import jakarta.persistence.*;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
 @Table(name = "routes")
 @Getter
 @Setter
-@NoArgsConstructor
 public class RouteEntity {
 
     @Id

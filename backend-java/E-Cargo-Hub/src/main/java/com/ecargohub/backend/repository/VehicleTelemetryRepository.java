@@ -16,6 +16,14 @@ public interface VehicleTelemetryRepository extends JpaRepository<VehicleTelemet
     List<VehicleTelemetryEntity> findByVehicleIdAndRecordedAtBetweenOrderByRecordedAtAsc(Long vehicleId,
             OffsetDateTime from, OffsetDateTime to);
 
+    /** Puntos desde una fecha, inclusive. */
+    List<VehicleTelemetryEntity> findByVehicleIdAndRecordedAtGreaterThanEqualOrderByRecordedAtAsc(Long vehicleId,
+            OffsetDateTime from);
+
+    /** Puntos hasta una fecha, inclusive. */
+    List<VehicleTelemetryEntity> findByVehicleIdAndRecordedAtLessThanEqualOrderByRecordedAtAsc(Long vehicleId,
+            OffsetDateTime to);
+
     /** Últimos N puntos (más recientes primero). */
     List<VehicleTelemetryEntity> findByVehicleIdOrderByRecordedAtDesc(Long vehicleId, Pageable pageable);
 

@@ -1,9 +1,17 @@
-import { ApplicationConfig, provideZoneChangeDetection } from '@angular/core';
-import { provideRouter } from '@angular/router';
-
+import { ApplicationConfig, importProvidersFrom } from '@angular/core';
+import { provideRouter, withComponentInputBinding } from '@angular/router';
+import { provideHttpClient, withInterceptorsFromDi } from '@angular/common/http';
+import { provideAnimations } from '@angular/platform-browser/animations';
+import { ApiModule, BASE_PATH } from './api';
 import { routes } from './app.routes';
-import { provideClientHydration, withNoIncrementalHydration } from '@angular/platform-browser';
+import { environment } from '../environments/environment';
 
 export const appConfig: ApplicationConfig = {
-  providers: [provideZoneChangeDetection({ eventCoalescing: true }), provideRouter(routes), provideClientHydration(withNoIncrementalHydration())]
+    providers: [
+        provideRouter(routes, withComponentInputBinding()),
+        provideHttpClient(withInterceptorsFromDi()),
+        provideAnimations(),
+        importProvidersFrom(ApiModule),
+        { provide: BASE_PATH, useValue: environment.apiUrl }
+    ]
 };
