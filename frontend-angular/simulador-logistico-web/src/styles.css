@@ -1,39 +1,118 @@
-/* 1️⃣ Imports de librerías (SIEMPRE primero) */
-@import '@angular/material/prebuilt-themes/azure-blue.css';
+/* ==========================================
+   1. IMPORTS
+   ========================================== */
 @import 'leaflet/dist/leaflet.css';
 
-/* 2️⃣ Tailwind */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* 3️⃣ Estilos globales */
+/* ==========================================
+   2. BASE
+   ========================================== */
 html, body {
     height: 100%;
     margin: 0;
-    font-family: Roboto, "Helvetica Neue", sans-serif;
+    font-family: 'Inter', 'Roboto', 'Helvetica Neue', sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    background: #1a1d24;
+    color: #f1f5f9;
 }
 
-body {
-    @apply bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100;
+/* ==========================================
+   3. CARDS
+   ========================================== */
+.card {
+    background: #232730;
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.04);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.spacer { flex: 1 1 auto; }
-
-/* 🎨 Scrollbar personalizado */
-::-webkit-scrollbar {
-    width: 8px;
-    height: 8px;
+.card:hover {
+    background: #2a2f3a;
+    border-color: rgba(0, 217, 255, 0.2);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
 }
 
-::-webkit-scrollbar-track {
-    @apply bg-gray-100 dark:bg-gray-800;
+/* ==========================================
+   4. TOPBAR BUTTONS
+   ========================================== */
+.topbar-btn {
+    background: #2a2f3a;
+    border-radius: 10px;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: all 0.2s;
 }
 
-::-webkit-scrollbar-thumb {
-    @apply bg-gray-400 dark:bg-gray-600 rounded;
+.topbar-btn:hover {
+    background: #374151;
+    color: #00d9ff;
 }
 
-::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-500 dark:bg-gray-500;
+.topbar-btn.active {
+    background: #00d9ff;
+    color: #1a1d24;
+}
+
+/* ==========================================
+   5. SCROLLBAR
+   ========================================== */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+
+/* ==========================================
+   6. ANIMACIONES
+   ========================================== */
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up {
+    animation: fadeInUp 0.5s ease-out forwards;
+    opacity: 0;
+}
+
+@keyframes pulse-dot {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(1.2); }
+}
+
+.live-dot {
+    animation: pulse-dot 2s ease-in-out infinite;
+}
+
+/* ==========================================
+   7. LEAFLET
+   ========================================== */
+.leaflet-container {
+    font-family: 'Inter', sans-serif;
+    background: #1a1d24;
+}
+
+.leaflet-popup-content-wrapper {
+    background: #232730;
+    color: #f1f5f9;
+    border-radius: 12px;
+    border: 1px solid rgba(0, 217, 255, 0.2);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.leaflet-popup-tip {
+    background: #232730;
+}
+
+.leaflet-popup-close-button {
+    color: #94a3b8 !important;
 }

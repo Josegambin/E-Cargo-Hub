@@ -5,7 +5,7 @@
  * Estos modelos son SOLO para los mensajes STOMP que el backend emite por WebSocket.
  */
 
-export interface VehicleTelemetryMessage {
+export interface websocketMessage {
     vehicleId: number;
     latitude: number | null;
     longitude: number | null;

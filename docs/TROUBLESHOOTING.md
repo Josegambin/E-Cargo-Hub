@@ -36,11 +36,11 @@ Invalid method Code length 0 in class file com/ecargohub/backend/dto/...
 
 **Solución:**
 
-1. **Actualizar Lombok** a `1.18.42` o superior en `pom.xml`:
+1. **Actualizar Lombok** a `1.18.48` o superior en `pom.xml`:
 
 ```xml
 <properties>
-    <lombok.version>1.18.42</lombok.version>
+    <lombok.version>1.18.48</lombok.version>
 </properties>
 ```
 

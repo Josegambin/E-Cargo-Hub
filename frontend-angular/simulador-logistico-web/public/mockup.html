@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Cargo Hub — Mockup</title>
+
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- ApexCharts CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['Poppins', 'Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        bg: {
+                            main: '#1a1d24',
+                            card: '#232730',
+                            hover: '#2a2f3a',
+                        },
+                        accent: {
+                            cyan: '#00d9ff',
+                            green: '#22c55e',
+                            pink: '#ec4899',
+                            amber: '#f59e0b',
+                            red: '#ef4444',
+                            violet: '#8b5cf6',
+                        },
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background: #1a1d24;
+            font-family: 'Inter', sans-serif;
+            color: #f1f5f9;
+            min-height: 100vh;
+        }
+
+        /* Card base */
+        .card {
+            background: #232730;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.04);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .card:hover {
+            background: #2a2f3a;
+            border-color: rgba(0, 217, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        /* Topbar */
+        .topbar-btn {
+            background: #2a2f3a;
+            border-radius: 10px;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .topbar-btn:hover {
+            background: #374151;
+            color: #00d9ff;
+        }
+
+        .topbar-btn.active {
+            background: #00d9ff;
+            color: #1a1d24;
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #374151; border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: #4b5563; }
+
+        /* Animaciones */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .animate-fade-in-up {
+            animation: fadeInUp 0.5s ease-out forwards;
+            opacity: 0;
+        }
+
+        .delay-1 { animation-delay: 0.05s; }
+        .delay-2 { animation-delay: 0.1s; }
+        .delay-3 { animation-delay: 0.15s; }
+        .delay-4 { animation-delay: 0.2s; }
+        .delay-5 { animation-delay: 0.25s; }
+        .delay-6 { animation-delay: 0.3s; }
+        .delay-7 { animation-delay: 0.35s; }
+        .delay-8 { animation-delay: 0.4s; }
+
+        /* Pulsing live dot */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        .live-dot {
+            animation: pulse 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 🌐 CONTENEDOR PRINCIPAL -->
+    <div class="max-w-[1600px] mx-auto p-4 lg:p-6">
+
+        <!-- 🏠 TOPBAR FLOTANTE -->
+        <div class="card px-3 py-2.5 flex items-center gap-3 mb-4 animate-fade-in-up">
+
+            <!-- Avatar + Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-gradient-to-br from-accent-cyan to-accent-violet
+                            flex items-center justify-center font-bold text-white text-lg shadow-lg">
+                    🚚
+                </div>
+                <div class="hidden md:flex flex-col leading-tight">
+                    <span class="font-display font-bold text-white">E-Cargo Hub</span>
+                    <span class="text-xs text-slate-400">Logistics Simulator</span>
+                </div>
+            </div>
+
+            <!-- Menú de navegación (iconos) -->
+            <div class="flex items-center gap-2 ml-6">
+                <div class="topbar-btn active" title="Dashboard">
+                    <span class="material-icons text-[20px]">dashboard</span>
+                </div>
+                <div class="topbar-btn" title="Vehículos">
+                    <span class="material-icons text-[20px]">local_shipping</span>
+                </div>
+                <div class="topbar-btn" title="Comandos">
+                    <span class="material-icons text-[20px]">play_circle</span>
+                </div>
+                <div class="topbar-btn" title="Histórico">
+                    <span class="material-icons text-[20px]">history</span>
+                </div>
+                <div class="topbar-btn" title="Alertas">
+                    <span class="material-icons text-[20px]">notifications</span>
+                </div>
+                <div class="topbar-btn" title="Usuarios">
+                    <span class="material-icons text-[20px]">people</span>
+                </div>
+            </div>
+
+            <div class="flex-1"></div>
+
+            <!-- Estado conexión -->
+            <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-green/10 border border-accent-green/20">
+                <span class="w-2 h-2 rounded-full bg-accent-green live-dot"></span>
+                <span class="text-xs font-semibold text-accent-green">CONNECTED</span>
+            </div>
+
+            <!-- Logout -->
+            <button class="px-4 py-2 rounded-full bg-accent-cyan text-bg-main font-semibold text-sm
+                           hover:shadow-lg hover:shadow-accent-cyan/30 transition-all">
+                Logout
+            </button>
+        </div>
+
+        <!-- 🎯 GRID PRINCIPAL (12 columnas) -->
+        <div class="grid grid-cols-12 gap-4">
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- COLUMNA IZQUIERDA (3 cols): Bar chart + Donut              -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+
+            <!-- Bar Chart: Actividad por hora -->
+            <div class="col-span-12 lg:col-span-3 card p-5 animate-fade-in-up delay-1">
+                <div class="flex items-start justify-between mb-4">
+                    <div>
+                        <div class="text-3xl font-display font-bold text-white">250</div>
+                        <div class="text-xs text-slate-400 uppercase tracking-wider font-medium">Eventos hoy</div>
+                    </div>
+                </div>
+                <div id="barChart"></div>
+            </div>
+
+            <!-- Donut: Top estados -->
+            <div class="col-span-12 lg:col-span-3 card p-5 animate-fade-in-up delay-2">
+                <div class="text-xs text-slate-400 uppercase tracking-wider font-medium mb-4">
+                    Estados de flota
+                </div>
+
+                <div class="flex justify-center mb-4">
+                    <div id="donutChart"></div>
+                </div>
+
+                <!-- Leyenda -->
+                <div class="grid grid-cols-3 gap-2 text-center">
+                    <div>
+                        <div class="flex items-center justify-center gap-1.5 mb-1">
+                            <span class="w-2 h-2 rounded-full bg-accent-cyan"></span>
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wider">En ruta</span>
+                        </div>
+                        <div class="text-sm font-bold text-white">50%</div>
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-center gap-1.5 mb-1">
+                            <span class="w-2 h-2 rounded-full bg-accent-green"></span>
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wider">Idle</span>
+                        </div>
+                        <div class="text-sm font-bold text-white">70%</div>
+                    </div>
+                    <div>
+                        <div class="flex items-center justify-center gap-1.5 mb-1">
+                            <span class="w-2 h-2 rounded-full bg-accent-pink"></span>
+                            <span class="text-[10px] text-slate-400 uppercase tracking-wider">Done</span>
+                        </div>
+                        <div class="text-sm font-bold text-white">75%</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- COLUMNA CENTRAL (9 cols): Gauges + Mapa                    -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+
+            <div class="col-span-12 lg:col-span-9 grid grid-cols-12 gap-4">
+
+                <!-- 3 Gauges -->
+                <div class="col-span-12 md:col-span-4 card p-5 flex items-center gap-4 animate-fade-in-up delay-3">
+                    <div id="gaugeActive" class="w-24 h-24 flex-shrink-0"></div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-xs text-slate-400 uppercase tracking-wider font-medium">Activos</div>
+                        <div class="text-2xl font-display font-bold text-white mt-1">2</div>
+                        <svg class="w-full h-8 mt-2" viewBox="0 0 100 30" preserveAspectRatio="none">
+                            <polyline fill="none" stroke="#00d9ff" stroke-width="2"
+                                points="0,25 15,20 30,22 45,15 60,18 75,10 90,12 100,8"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="col-span-12 md:col-span-4 card p-5 flex items-center gap-4 animate-fade-in-up delay-4">
+                    <div id="gaugeSpeed" class="w-24 h-24 flex-shrink-0"></div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-xs text-slate-400 uppercase tracking-wider font-medium">Vel. media</div>
+                        <div class="text-2xl font-display font-bold text-white mt-1">85 km/h</div>
+                        <svg class="w-full h-8 mt-2" viewBox="0 0 100 30" preserveAspectRatio="none">
+                            <polyline fill="none" stroke="#22c55e" stroke-width="2"
+                                points="0,20 15,18 30,22 45,10 60,15 75,8 90,14 100,6"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <div class="col-span-12 md:col-span-4 card p-5 flex items-center gap-4 animate-fade-in-up delay-5">
+                    <div id="gaugeEvents" class="w-24 h-24 flex-shrink-0"></div>
+                    <div class="flex-1 min-w-0">
+                        <div class="text-xs text-slate-400 uppercase tracking-wider font-medium">Eventos</div>
+                        <div class="text-2xl font-display font-bold text-white mt-1">12</div>
+                        <svg class="w-full h-8 mt-2" viewBox="0 0 100 30" preserveAspectRatio="none">
+                            <polyline fill="none" stroke="#ec4899" stroke-width="2"
+                                points="0,22 15,15 30,18 45,12 60,20 75,10 90,16 100,8"/>
+                        </svg>
+                    </div>
+                </div>
+
+                <!-- Mapa + métricas -->
+                <div class="col-span-12 md:col-span-5 card p-5 animate-fade-in-up delay-6">
+                    <div class="mb-4">
+                        <div class="text-3xl font-display font-bold text-white">$450,00</div>
+                        <div class="text-xs text-slate-400 uppercase tracking-wider font-medium">Distancia total</div>
+                    </div>
+
+                    <div class="flex gap-4 mb-4">
+                        <div class="flex items-center gap-3">
+                            <div id="miniGauge1" class="w-16 h-16"></div>
+                            <div>
+                                <div class="text-lg font-bold text-white">250</div>
+                                <div class="text-[10px] text-slate-400 uppercase">Cox</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-3">
+                            <div id="miniGauge2" class="w-16 h-16"></div>
+                            <div>
+                                <div class="text-lg font-bold text-white">45</div>
+                                <div class="text-[10px] text-slate-400 uppercase">Murcia</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mapa -->
+                <div class="col-span-12 md:col-span-7 card p-5 animate-fade-in-up delay-7">
+                    <div class="text-xs text-slate-400 uppercase tracking-wider font-medium mb-3">
+                        Mapa en vivo
+                    </div>
+
+                    <!-- Mapa simulado con pins -->
+                    <div class="relative bg-gradient-to-br from-slate-800 to-slate-900 rounded-xl overflow-hidden"
+                         style="height: 220px;">
+
+                        <!-- Grid decorativo -->
+                        <div class="absolute inset-0 opacity-20"
+                             style="background-image:
+                                 linear-gradient(rgba(0,217,255,0.15) 1px, transparent 1px),
+                                 linear-gradient(90deg, rgba(0,217,255,0.15) 1px, transparent 1px);
+                                 background-size: 30px 30px;">
+                        </div>
+
+                        <!-- Pin 1 -->
+                        <div class="absolute" style="top: 35%; left: 25%;">
+                            <div class="relative">
+                                <div class="w-3 h-3 rounded-full bg-accent-cyan"></div>
+                                <div class="absolute -inset-2 rounded-full bg-accent-cyan/30 animate-ping"></div>
+                                <div class="absolute left-5 top-0 px-2 py-1 rounded bg-bg-card border border-accent-cyan/30
+                                            text-[10px] font-semibold whitespace-nowrap text-accent-cyan">
+                                    V1 · Cox
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Pin 2 -->
+                        <div class="absolute" style="top: 55%; left: 55%;">
+                            <div class="relative">
+                                <div class="w-3 h-3 rounded-full bg-accent-green"></div>
+                                <div class="absolute -inset-2 rounded-full bg-accent-green/30 animate-ping"></div>
+                                <div class="absolute left-5 top-0 px-2 py-1 rounded bg-bg-card border border-accent-green/30
+                                            text-[10px] font-semibold whitespace-nowrap text-accent-green">
+                                    V2 · Murcia
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Línea de ruta -->
+                        <svg class="absolute inset-0 w-full h-full pointer-events-none" style="z-index: -1;">
+                            <line x1="25%" y1="35%" x2="55%" y2="55%"
+                                  stroke="#00d9ff" stroke-width="2" stroke-dasharray="5,5" opacity="0.6"/>
+                        </svg>
+
+                        <!-- Pin 3 -->
+                        <div class="absolute" style="top: 70%; left: 80%;">
+                            <div class="relative">
+                                <div class="w-3 h-3 rounded-full bg-accent-pink"></div>
+                                <div class="absolute -inset-2 rounded-full bg-accent-pink/30 animate-ping"></div>
+                                <div class="absolute right-5 top-0 px-2 py-1 rounded bg-bg-card border border-accent-pink/30
+                                            text-[10px] font-semibold whitespace-nowrap text-accent-pink">
+                                    V3 · Cartagena
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════ -->
+            <!-- FILA INFERIOR: Tablas                                       -->
+            <!-- ═══════════════════════════════════════════════════════════ -->
+
+            <!-- Vehículos activos -->
+            <div class="col-span-12 lg:col-span-5 card p-5 animate-fade-in-up delay-8">
+                <div class="text-xs text-slate-400 uppercase tracking-wider font-medium mb-4">
+                    🚚 Vehículos activos
+                </div>
+
+                <div class="space-y-3">
+                    <!-- V1 -->
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-bg-hover/50">
+                        <div class="w-10 h-10 rounded-lg bg-accent-cyan/10 flex items-center justify-center">
+                            <span class="text-lg">🚚</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="font-semibold text-white text-sm">Vehículo 1</span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-accent-cyan/20 text-accent-cyan">
+                                    EN RUTA
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-2 mt-1">
+                                <div class="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-accent-cyan to-accent-violet rounded-full"
+                                         style="width: 45%"></div>
+                                </div>
+                                <span class="text-xs text-slate-400 font-mono">45%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- V2 -->
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-bg-hover/50">
+                        <div class="w-10 h-10 rounded-lg bg-accent-green/10 flex items-center justify-center">
+                            <span class="text-lg">🚚</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="font-semibold text-white text-sm">Vehículo 2</span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-accent-green/20 text-accent-green">
+                                    EN RUTA
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-2 mt-1">
+                                <div class="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-gradient-to-r from-accent-green to-accent-cyan rounded-full"
+                                         style="width: 30%"></div>
+                                </div>
+                                <span class="text-xs text-slate-400 font-mono">30%</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- V3 -->
+                    <div class="flex items-center gap-3 p-3 rounded-xl bg-bg-hover/50">
+                        <div class="w-10 h-10 rounded-lg bg-slate-500/10 flex items-center justify-center">
+                            <span class="text-lg">🚚</span>
+                        </div>
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2">
+                                <span class="font-semibold text-white text-sm">Vehículo 3</span>
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-500/20 text-slate-400">
+                                    IDLE
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-2 mt-1">
+                                <div class="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                                    <div class="h-full bg-slate-500 rounded-full" style="width: 0%"></div>
+                                </div>
+                                <span class="text-xs text-slate-400 font-mono">0%</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Eventos en vivo -->
+            <div class="col-span-12 lg:col-span-7 card p-5 animate-fade-in-up delay-8">
+                <div class="flex items-center justify-between mb-4">
+                    <div class="text-xs text-slate-400 uppercase tracking-wider font-medium">
+                        📢 Eventos en vivo
+                    </div>
+                    <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-accent-pink/20 text-accent-pink">
+                        LIVE
+                    </span>
+                </div>
+
+                <div class="space-y-2 max-h-64 overflow-y-auto pr-2">
+                    <!-- Eventos -->
+                    <div class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-bg-hover/50 transition-colors">
+                        <span class="text-xs text-slate-500 font-mono">12:30:45</span>
+                        <span class="w-2 h-2 rounded-full bg-accent-green"></span>
+                        <span class="text-sm text-white flex-1">Vehículo 1 ha iniciado ruta</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-accent-green/20 text-accent-green">
+                            STARTED
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-bg-hover/50 transition-colors">
+                        <span class="text-xs text-slate-500 font-mono">12:30:42</span>
+                        <span class="w-2 h-2 rounded-full bg-accent-cyan"></span>
+                        <span class="text-sm text-white flex-1">Vehículo 2 ha iniciado ruta</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-accent-cyan/20 text-accent-cyan">
+                            STARTED
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-bg-hover/50 transition-colors">
+                        <span class="text-xs text-slate-500 font-mono">12:30:15</span>
+                        <span class="w-2 h-2 rounded-full bg-accent-amber"></span>
+                        <span class="text-sm text-white flex-1">Vehículo 1 ha sido pausado</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-accent-amber/20 text-accent-amber">
+                            PAUSED
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-bg-hover/50 transition-colors">
+                        <span class="text-xs text-slate-500 font-mono">12:29:58</span>
+                        <span class="w-2 h-2 rounded-full bg-accent-violet"></span>
+                        <span class="text-sm text-white flex-1">Vehículo 1 ha sido reanudado</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-accent-violet/20 text-accent-violet">
+                            RESUMED
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-bg-hover/50 transition-colors">
+                        <span class="text-xs text-slate-500 font-mono">12:29:32</span>
+                        <span class="w-2 h-2 rounded-full bg-accent-pink"></span>
+                        <span class="text-sm text-white flex-1">Vehículo 3 ha llegado a destino</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-accent-pink/20 text-accent-pink">
+                            COMPLETED
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-3 p-2.5 rounded-lg hover:bg-bg-hover/50 transition-colors">
+                        <span class="text-xs text-slate-500 font-mono">12:29:10</span>
+                        <span class="w-2 h-2 rounded-full bg-accent-red"></span>
+                        <span class="text-sm text-white flex-1">Vehículo 3 ha sido detenido</span>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded bg-accent-red/20 text-accent-red">
+                            STOPPED
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <!-- SCRIPTS — Configuración de los gráficos ApexCharts          -->
+    <!-- ═══════════════════════════════════════════════════════════ -->
+    <script>
+        // 🎨 Colores globales
+        const colors = {
+            cyan: '#00d9ff',
+            green: '#22c55e',
+            pink: '#ec4899',
+            amber: '#f59e0b',
+            violet: '#8b5cf6',
+            red: '#ef4444',
+        };
+
+        // ═══════════════════════════════════════════════════════════
+        // 1. BAR CHART — Actividad por hora
+        // ═══════════════════════════════════════════════════════════
+        new ApexCharts(document.querySelector('#barChart'), {
+            chart: {
+                type: 'bar',
+                height: 130,
+                sparkline: { enabled: true },
+                toolbar: { show: false },
+            },
+            series: [{
+                name: 'Eventos',
+                data: [40, 30, 20, 45, 25, 50, 35, 45, 30, 40],
+            }],
+            plotOptions: {
+                bar: {
+                    borderRadius: 4,
+                    columnWidth: '60%',
+                    distributed: true,
+                },
+            },
+            colors: [colors.cyan, colors.violet, colors.pink, colors.amber, colors.green,
+                     colors.cyan, colors.violet, colors.pink, colors.amber, colors.green],
+            xaxis: {
+                categories: ['L', 'M', 'X', 'J', 'V', 'S', 'D', 'L', 'M', 'X'],
+                labels: { style: { colors: '#64748b', fontSize: '9px' } },
+            },
+            yaxis: { show: false },
+            grid: { show: false },
+            tooltip: { theme: 'dark' },
+        }).render();
+
+        // ═══════════════════════════════════════════════════════════
+        // 2. DONUT — Estados de flota
+        // ═══════════════════════════════════════════════════════════
+        new ApexCharts(document.querySelector('#donutChart'), {
+            chart: {
+                type: 'donut',
+                height: 160,
+                width: 160,
+            },
+            series: [50, 70, 75],
+            labels: ['En ruta', 'Idle', 'Completado'],
+            colors: [colors.cyan, colors.green, colors.pink],
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '70%',
+                        labels: {
+                            show: true,
+                            name: { show: false },
+                            value: {
+                                show: true,
+                                fontSize: '16px',
+                                fontWeight: 700,
+                                color: '#ffffff',
+                                formatter: () => '$650',
+                            },
+                            total: {
+                                show: true,
+                                label: 'Total',
+                                color: '#94a3b8',
+                                fontSize: '10px',
+                                formatter: () => '195',
+                            },
+                        },
+                    },
+                },
+            },
+            stroke: { width: 0 },
+            dataLabels: { enabled: false },
+            legend: { show: false },
+            tooltip: { theme: 'dark' },
+        }).render();
+
+        // ═══════════════════════════════════════════════════════════
+        // 3. GAUGE 1 — Vehículos activos (cyan)
+        // ═══════════════════════════════════════════════════════════
+        new ApexCharts(document.querySelector('#gaugeActive'), {
+            chart: {
+                type: 'radialBar',
+                height: 90,
+                width: 90,
+                sparkline: { enabled: true },
+            },
+            series: [87],
+            colors: [colors.cyan],
+            plotOptions: {
+                radialBar: {
+                    hollow: { size: '55%' },
+                    track: { background: '#2a2f3a', strokeWidth: '100%' },
+                    dataLabels: {
+                        name: { show: false },
+                        value: {
+                            offsetY: 4,
+                            fontSize: '14px',
+                            fontWeight: 700,
+                            color: '#ffffff',
+                            formatter: () => '87%',
+                        },
+                    },
+                },
+            },
+            stroke: { lineCap: 'round' },
+        }).render();
+
+        // ═══════════════════════════════════════════════════════════
+        // 4. GAUGE 2 — Velocidad media (green)
+        // ═══════════════════════════════════════════════════════════
+        new ApexCharts(document.querySelector('#gaugeSpeed'), {
+            chart: {
+                type: 'radialBar',
+                height: 90,
+                width: 90,
+                sparkline: { enabled: true },
+            },
+            series: [95],
+            colors: [colors.green],
+            plotOptions: {
+                radialBar: {
+                    hollow: { size: '55%' },
+                    track: { background: '#2a2f3a', strokeWidth: '100%' },
+                    dataLabels: {
+                        name: { show: false },
+                        value: {
+                            offsetY: 4,
+                            fontSize: '14px',
+                            fontWeight: 700,
+                            color: '#ffffff',
+                            formatter: () => '95%',
+                        },
+                    },
+                },
+            },
+            stroke: { lineCap: 'round' },
+        }).render();
+
+        // ═══════════════════════════════════════════════════════════
+        // 5. GAUGE 3 — Eventos (pink)
+        // ═══════════════════════════════════════════════════════════
+        new ApexCharts(document.querySelector('#gaugeEvents'), {
+            chart: {
+                type: 'radialBar',
+                height: 90,
+                width: 90,
+                sparkline: { enabled: true },
+            },
+            series: [43],
+            colors: [colors.pink],
+            plotOptions: {
+                radialBar: {
+                    hollow: { size: '55%' },
+                    track: { background: '#2a2f3a', strokeWidth: '100%' },
+                    dataLabels: {
+                        name: { show: false },
+                        value: {
+                            offsetY: 4,
+                            fontSize: '14px',
+                            fontWeight: 700,
+                            color: '#ffffff',
+                            formatter: () => '43%',
+                        },
+                    },
+                },
+            },
+            stroke: { lineCap: 'round' },
+        }).render();
+
+        // ═══════════════════════════════════════════════════════════
+        // 6. MINI GAUGE 1 — Cox (amber)
+        // ═══════════════════════════════════════════════════════════
+        new ApexCharts(document.querySelector('#miniGauge1'), {
+            chart: {
+                type: 'radialBar',
+                height: 60,
+                width: 60,
+                sparkline: { enabled: true },
+            },
+            series: [56],
+            colors: [colors.amber],
+            plotOptions: {
+                radialBar: {
+                    hollow: { size: '60%' },
+                    track: { background: '#2a2f3a', strokeWidth: '100%' },
+                    dataLabels: {
+                        name: { show: false },
+                        value: {
+                            offsetY: 3,
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            color: '#ffffff',
+                            formatter: () => '56%',
+                        },
+                    },
+                },
+            },
+            stroke: { lineCap: 'round' },
+        }).render();
+
+        // ═══════════════════════════════════════════════════════════
+        // 7. MINI GAUGE 2 — Murcia (cyan)
+        // ═══════════════════════════════════════════════════════════
+        new ApexCharts(document.querySelector('#miniGauge2'), {
+            chart: {
+                type: 'radialBar',
+                height: 60,
+                width: 60,
+                sparkline: { enabled: true },
+            },
+            series: [42],
+            colors: [colors.cyan],
+            plotOptions: {
+                radialBar: {
+                    hollow: { size: '60%' },
+                    track: { background: '#2a2f3a', strokeWidth: '100%' },
+                    dataLabels: {
+                        name: { show: false },
+                        value: {
+                            offsetY: 3,
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            color: '#ffffff',
+                            formatter: () => '42%',
+                        },
+                    },
+                },
+            },
+            stroke: { lineCap: 'round' },
+        }).render();
+    </script>
+</body>
+</html>1

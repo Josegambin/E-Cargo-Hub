@@ -1,10 +1,10 @@
 import { Injectable, signal, computed } from '@angular/core';
-import { VehicleTelemetryMessage } from '../models/VehicleTelemetryMessage.model';
+import { websocketMessage } from '../models/websockeMessage.model';
 
 @Injectable({ providedIn: 'root' })
 export class VehicleStateService {
 
-    private vehiclesMap = signal<Map<number, VehicleTelemetryMessage>>(new Map());
+    private vehiclesMap = signal<Map<number, websocketMessage>>(new Map());
 
     readonly vehicles = computed(() => {
         const map = this.vehiclesMap();
@@ -13,11 +13,11 @@ export class VehicleStateService {
 
     readonly activeCount = computed(() => this.vehiclesMap().size);
 
-    getVehicle(vehicleId: number): VehicleTelemetryMessage | undefined {
+    getVehicle(vehicleId: number): websocketMessage | undefined {
         return this.vehiclesMap().get(vehicleId);
     }
 
-    update(telemetry: VehicleTelemetryMessage): void {
+    update(telemetry: websocketMessage): void {
         const currentMap = this.vehiclesMap();
         const newMap = new Map(currentMap);
         newMap.set(telemetry.vehicleId, telemetry);

@@ -1,28 +1,25 @@
 import { Injectable, signal } from '@angular/core';
 import { Client, IMessage, StompSubscription } from '@stomp/stompjs';
-import SockJS from 'sockjs-client';
 import { Subject } from 'rxjs';
-import { VehicleTelemetryMessage, FleetEvent } from '../models/VehicleTelemetryMessage.model';
+import { websocketMessage, FleetEvent } from '../models/websockeMessage.model';
 import { environment } from '../../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class WebSocketService {
 
+    // 🔌 Estado de conexión
     readonly connected = signal<boolean>(false);
 
-    private telemetrySubject = new Subject<VehicleTelemetryMessage>();
+    // 📢 Últimos 50 eventos de flota (para el dashboard)
+    readonly lastEvents = signal<FleetEvent[]>([]);
+
+    // 📡 Streams para telemetría y eventos
+    private telemetrySubject = new Subject<websocketMessage>();
     private fleetEventSubject = new Subject<FleetEvent>();
 
     private client: Client | null = null;
     private subscriptions = new Map<string, StompSubscription>();
-
-    /**
-     * Cola de suscripciones pendientes.
-     * Si alguien se suscribe antes de que STOMP esté conectado,
-     * se guarda aquí y se aplica automáticamente al conectar.
-     */
     private pendingSubscriptions = new Set<string>();
-
     private fleetEventsSubscribed = false;
 
     get telemetry$() { return this.telemetrySubject.asObservable(); }
@@ -38,10 +35,10 @@ export class WebSocketService {
             return;
         }
 
-        console.log('🔌 Conectando WebSocket a', environment.wsUrl);
+        console.log('🔌 Conectando WebSocket nativo a', environment.wsUrlNative);
 
         this.client = new Client({
-            webSocketFactory: () => new SockJS(environment.wsUrl),
+            brokerURL: environment.wsUrlNative,   // 👈 WebSocket nativo
             reconnectDelay: 5000,
             heartbeatIncoming: 10000,
             heartbeatOutgoing: 10000,
@@ -49,8 +46,6 @@ export class WebSocketService {
             onConnect: () => {
                 console.log('🟢 WebSocket conectado');
                 this.connected.set(true);
-
-                // 🔄 Aplicar suscripciones pendientes
                 this.applyPendingSubscriptions();
             },
 
@@ -85,22 +80,12 @@ export class WebSocketService {
     // SUSCRIPCIONES
     // ==========================================
 
-    /**
-     * Aplica las suscripciones que estaban pendientes
-     * (porque el cliente STOMP aún no había conectado).
-     */
     private applyPendingSubscriptions(): void {
-        if (!this.client || !this.client.connected) {
-            return;
-        }
+        if (!this.client || !this.client.connected) return;
 
-        // Suscripciones de vehículos pendientes
-        this.pendingSubscriptions.forEach(topic => {
-            this.doSubscribe(topic);
-        });
+        this.pendingSubscriptions.forEach(topic => this.doSubscribe(topic));
         this.pendingSubscriptions.clear();
 
-        // Suscripción a eventos de flota
         if (this.fleetEventsSubscribed && !this.subscriptions.has('/topic/fleet-status')) {
             this.doSubscribeFleet();
         }
@@ -109,12 +94,8 @@ export class WebSocketService {
     subscribeToVehicle(vehicleId: number): void {
         const topic = `/topic/vehicle-status/${vehicleId}`;
 
-        if (this.subscriptions.has(topic)) {
-            return;   // ya suscrito
-        }
+        if (this.subscriptions.has(topic)) return;
 
-        // Si el cliente está conectado, suscribir ya
-        // Si no, dejar pendiente
         if (this.client?.connected) {
             this.doSubscribe(topic);
         } else {
@@ -127,7 +108,7 @@ export class WebSocketService {
 
         const sub = this.client.subscribe(topic, (msg: IMessage) => {
             try {
-                const telemetry: VehicleTelemetryMessage = JSON.parse(msg.body);
+                const telemetry: websocketMessage = JSON.parse(msg.body);
                 this.telemetrySubject.next(telemetry);
             } catch (e) {
                 console.error('❌ Error parseando telemetría:', e);
@@ -151,9 +132,7 @@ export class WebSocketService {
     subscribeToFleetEvents(): void {
         this.fleetEventsSubscribed = true;
 
-        if (this.subscriptions.has('/topic/fleet-status')) {
-            return;   // ya suscrito
-        }
+        if (this.subscriptions.has('/topic/fleet-status')) return;
 
         if (this.client?.connected) {
             this.doSubscribeFleet();
@@ -168,7 +147,14 @@ export class WebSocketService {
         const sub = this.client.subscribe('/topic/fleet-status', (msg: IMessage) => {
             try {
                 const event: FleetEvent = JSON.parse(msg.body);
+
+                // Emitir al stream
                 this.fleetEventSubject.next(event);
+
+                // Guardar últimos 50 eventos (para el dashboard)
+                const current = this.lastEvents();
+                this.lastEvents.set([event, ...current].slice(0, 50));
+
             } catch (e) {
                 console.error('❌ Error parseando evento de flota:', e);
             }
@@ -178,3 +164,6 @@ export class WebSocketService {
         console.log('📢 Suscrito a /topic/fleet-status');
     }
 }
+
+export type { FleetEvent };
+export type { websocketMessage };

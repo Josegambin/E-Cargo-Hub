@@ -1,23 +1,25 @@
 import { Component, inject } from '@angular/core';
+import { CommonModule } from '@angular/common';
 import { LanguageService } from '../../core/services/language.facade';
 
 @Component({
     selector: 'app-telemetry',
     standalone: true,
+    imports: [CommonModule],
     template: `
-        <div class="space-y-6">
+        <div class="space-y-8 animate-fade-in-up">
             <div>
-                <h1 class="text-3xl font-bold text-gray-900 dark:text-white">
+                <h1 class="text-4xl font-display font-bold text-slate-900 dark:text-white mb-2">
                     {{ t('telemetry.title') }}
                 </h1>
-                <p class="text-gray-600 dark:text-gray-400 mt-1">
-                    {{ t('telemetry.subtitle') }}
-                </p>
+                <p class="text-slate-600 dark:text-slate-400">{{ t('telemetry.subtitle') }}</p>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 rounded-xl shadow p-8 text-center">
-                <span class="text-5xl">📊</span>
-                <h2 class="text-xl font-semibold mt-4 text-gray-900 dark:text-white">
+            <div class="glass-card p-12 text-center">
+                <div class="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-glow mb-4 animate-float">
+                    <span class="text-4xl">📊</span>
+                </div>
+                <h2 class="text-2xl font-display font-bold text-slate-900 dark:text-white mb-2">
                     Histórico en construcción
                 </h2>
             </div>
