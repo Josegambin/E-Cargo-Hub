@@ -1,0 +1,31 @@
+plugins {
+    id "com.android.application"
+}
+
+android {
+    namespace "com.ecargohub.aaosbridge"
+    compileSdk 37
+    buildFeatures {
+        buildConfig true
+    }
+
+    defaultConfig {
+        applicationId "com.ecargohub.aaosbridge"
+        minSdk 29
+        targetSdk 35
+        versionCode 1
+        versionName "1.0.0"
+        buildConfigField "String", "BACKEND_URL",
+                "\"${providers.gradleProperty('ecargoBackendUrl').getOrElse('http://10.0.2.2:8081')}\""
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
+
+dependencies {
+    implementation "androidx.car.app:app:1.7.0"
+    implementation "androidx.car.app:app-automotive:1.7.0"
+}

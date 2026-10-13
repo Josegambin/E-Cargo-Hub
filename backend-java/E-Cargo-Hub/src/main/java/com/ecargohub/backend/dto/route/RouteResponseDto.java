@@ -4,6 +4,9 @@ import java.util.List;
 
 public record RouteResponseDto(List<double[]> coordinates, // Lista de puntos [latitud, longitud] que forman el camino
         double distanceInMeters, // Distancia total de la ruta
-        double timeInSeconds // Tiempo estimado de viaje
-) {
+        double timeInSeconds, // Tiempo estimado de viaje
+        List<Double> speedLimitsKmh) {
+    public RouteResponseDto(List<double[]> coordinates, double distanceInMeters, double timeInSeconds) {
+        this(coordinates, distanceInMeters, timeInSeconds, List.of());
+    }
 }

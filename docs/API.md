@@ -54,7 +54,9 @@ Todos los errores devuelven el mismo formato JSON:
 
 ### 1.6. Autenticación
 
-**Estado actual:** no se exige autenticación. No exponer este estado en producción sin configurar autenticación.
+Las rutas de control requieren `X-Control-Token`, configurado mediante `ECARGO_CONTROL_API_TOKEN`.
+Las pantallas vinculadas usan una credencial independiente, limitada a consultar su propio estado.
+No incluyas ninguno de estos secretos en el panel administrativo ni en código público.
 
 ### Modelos y entidades
 
@@ -143,13 +145,32 @@ Devuelve un vehículo por su ID.
 
 Crea un vehículo nuevo.
 
-**Body:**
+Para iniciar, crea primero una ruta con `POST /api/v1/routes`, guarda el `id` devuelto y úsalo
+en el comando. Por ejemplo:
+
+```json
+{
+  "name": "Cox - Murcia",
+  "origin": { "latitude": 38.015, "longitude": -0.746 },
+  "destination": { "latitude": 37.983, "longitude": -1.129 }
+}
+```
+
+El backend obtiene origen y destino de esa ruta y usa los límites `max_speed` de GraphHopper.
+Cuando GraphHopper devuelve `null` para un tramo, se aplica únicamente a ese tramo la velocidad
+máxima configurada para el vehículo; los valores numéricos recibidos se conservan y los datos
+malformados o las rutas sin geometría válida siguen rechazándose.
+
+**Body START:**
 
 ```json
 {
   "name": "TRUCK-003",
   "type": "TRUCK",
-  "maxSpeed": 120
+  "maxSpeed": 120,
+  "energyType": "FUEL",
+  "energyCapacity": 300,
+  "energyConsumptionPer100": 28
 }
 ```
 
@@ -161,6 +182,10 @@ Crea un vehículo nuevo.
   "name": "TRUCK-003",
   "type": "TRUCK",
   "maxSpeed": 120,
+  "energyType": "FUEL",
+  "energyCapacity": 300,
+  "energyConsumptionPer100": 28,
+  "energyPercent": 100,
   "status": "IDLE",
   "currentPosition": null
 }
@@ -178,9 +203,16 @@ Actualiza un vehículo existente.
 {
   "name": "TRUCK-003",
   "type": "TRUCK",
-  "maxSpeed": 110
+  "maxSpeed": 110,
+  "energyType": "FUEL",
+  "energyCapacity": 300,
+  "energyConsumptionPer100": 28,
+  "remainingEnergy": 300
 }
 ```
+
+Para repostar o recargar desde el backend, establece `remainingEnergy` entre `0` y
+`energyCapacity` en la misma petición de actualización.
 
 **Respuesta 200:**
 
@@ -190,6 +222,10 @@ Actualiza un vehículo existente.
   "name": "TRUCK-003",
   "type": "TRUCK",
   "maxSpeed": 110,
+  "energyType": "FUEL",
+  "energyCapacity": 300,
+  "energyConsumptionPer100": 28,
+  "energyPercent": 100,
   "status": "IDLE",
   "currentPosition": null
 }
@@ -220,6 +256,9 @@ Devuelve el estado actual del vehículo (última posición conocida).
   "longitude": -0.8844,
   "progress": 45,
   "speedKmh": 87.5,
+  "energyPercent": 72.4,
+  "energyType": "FUEL",
+  "gearPosition": "D4",
   "status": "EN_RUTA",
   "updatedAt": "2026-09-30T14:30:00Z"
 }
@@ -234,6 +273,9 @@ Devuelve el estado actual del vehículo (última posición conocida).
   "longitude": null,
   "progress": 0,
   "speedKmh": 0.0,
+  "energyPercent": 100,
+  "energyType": "FUEL",
+  "gearPosition": "P",
   "status": "IDLE",
   "updatedAt": null
 }
@@ -241,7 +283,31 @@ Devuelve el estado actual del vehículo (última posición conocida).
 
 ---
 
-### 2.3. Telemetría
+### 2.3. Vincular pantallas de solo lectura
+
+El teléfono no puede configurar el vehículo ni emitir comandos. El operador inicia la vinculación
+desde el backend; el código dura diez minutos y solo puede reclamarse una vez.
+
+```http
+POST /api/v1/vehicles/1/device-enrollments
+X-Control-Token: <ECARGO_CONTROL_API_TOKEN>
+```
+
+La respuesta `201` incluye `pairingUrl` y `qrSvg`. Muestra el SVG en un lugar seguro y escanéalo
+con la cámara del teléfono; para AAOS introduce el `pairingCode` en **Vincular pantalla**. La PWA
+`/vehicle-display` reclama el código y guarda una credencial
+que solo puede consultar `GET /api/v1/device/state` usando `X-Vehicle-Device-Token`. Nunca envíes
+`X-Control-Token` a la PWA ni al dispositivo del vehículo.
+
+El enrolamiento devuelve una credencial una sola vez; el backend almacena únicamente su hash.
+El QR también contiene un secreto temporal: no lo compartas y genera otro si no se usa antes de
+su caducidad.
+
+Configura `ECARGO_MOBILE_APP_URL` como la URL HTTPS accesible desde el teléfono (por ejemplo,
+`https://fleet.example/vehicle-display`) y configura `environment.prod.ts` con la URL HTTPS
+pública del backend antes de compilar la PWA para producción.
+
+### 2.4. Telemetría
 
 #### `GET /api/v1/vehicles/{vehicleId}/telemetry`
 
@@ -318,11 +384,53 @@ Borra todo el histórico de telemetría del vehículo.
 
 ---
 
-### 2.4. Comandos
+### 2.5. Integración Android Automotive OS (AAOS)
+
+La app puente `android-aaos-bridge` detecta y lee las propiedades que el VHAL y los permisos de AAOS ponen a disposición, y envía cada instantánea al backend. Se guardan las propiedades como un mapa flexible para no perder sensores que varíen entre vehículos/emuladores.
+
+#### `POST /api/v1/vehicles/{vehicleId}/aaos/telemetry`
+
+```json
+{
+  "source": "android-automotive",
+  "capturedAt": "2026-10-06T17:30:00Z",
+  "values": {
+    "PERF_VEHICLE_SPEED": 12.5,
+    "SEAT_BELT_BUCKLED@1": true,
+    "FUEL_LEVEL": 68.0
+  },
+  "availableProperties": ["PERF_VEHICLE_SPEED", "SEAT_BELT_BUCKLED", "FUEL_LEVEL"],
+  "readErrors": []
+}
+```
+
+`values` admite hasta 200 propiedades por instantánea. Los nombres y la disponibilidad dependen del VHAL del vehículo y de los permisos concedidos; el ejemplo no garantiza que cada vehículo exponga esos sensores.
+
+#### `GET /api/v1/vehicles/{vehicleId}/aaos/telemetry/latest?limit=1`
+
+Devuelve hasta 500 instantáneas recientes, incluida la fecha de captura, recepción, propiedades leídas, propiedades disponibles y errores de lectura.
+
+#### `POST /api/v1/vehicles/{vehicleId}/aaos/notifications`
+
+Publica una notificación para la app del vehículo, que se suscribe a `/topic/vehicles/{vehicleId}/aaos/notifications`:
+
+```json
+{
+  "title": "Cinturón",
+  "message": "Comprueba el cinturón del conductor.",
+  "severity": "WARNING"
+}
+```
+
+#### `POST /api/v1/vehicles/{vehicleId}/aaos/simulated-commands`
+
+Envía un comando al vehículo simulado asignado, no a los actuadores físicos del coche. Requiere la cabecera `X-Control-Token` configurada mediante `ECARGO_CONTROL_API_TOKEN` con al menos 32 bytes UTF-8. Consulta los tipos y las restricciones en la sección de comandos.
+
+### 2.6. Comandos
 
 #### `POST /api/v1/vehicles/{vehicleId}/commands`
 
-Envía un comando a un vehículo.
+Envía un comando a un vehículo. Requiere la cabecera `X-Control-Token` configurada mediante `ECARGO_CONTROL_API_TOKEN` con al menos 32 bytes UTF-8. La misma protección se aplica a `POST /api/v1/fleet/commands` y a las rutas de inicio, pausa, reanudación y parada de simulaciones. Si el token no está configurado o es demasiado corto, el control responde `503`; si falta o no coincide, responde `401`. No incluyas este secreto en clientes de navegador o apps del vehículo.
 
 **Parámetros de ruta:**
 - `vehicleId` (Long) — ID del vehículo destinatario.
@@ -332,11 +440,7 @@ Envía un comando a un vehículo.
 ```json
 {
   "command": "START",
-  "value": null,
-  "originLat": 38.1408,
-  "originLon": -0.8844,
-  "destLat": 37.9922,
-  "destLon": -1.1307
+  "routeId": 1
 }
 ```
 
@@ -344,14 +448,14 @@ Envía un comando a un vehículo.
 
 | Campo | Tipo | Obligatorio | Descripción |
 |---|---|---|---|
-| `command` | Enum | Sí | `START`, `PAUSE`, `RESUME`, `STOP` |
-| `value` | Double | No | Valor asociado (opcional) |
-| `originLat` | Double | No | Latitud de origen (opcional) |
-| `originLon` | Double | No | Longitud de origen (opcional) |
-| `destLat` | Double | No | Latitud de destino (opcional) |
-| `destLon` | Double | No | Longitud de destino (opcional) |
+| `command` | Enum | Sí | `START`, `PAUSE`, `RESUME`, `STOP`, `SET_SPEED`, `INCREASE_SPEED`, `DECREASE_SPEED`, `EMERGENCY_BRAKE`, `SET_IGNITION`, `SET_HEADLIGHTS`, `SET_HIGH_BEAMS`, `SET_HAZARD_LIGHTS`, `SET_TURN_SIGNAL`, `SET_WIPERS`, `SET_CLIMATE_POWER`, `SET_CLIMATE_TEMPERATURE`, `SET_CLIMATE_FAN_SPEED`, `SET_CLIMATE_MODE` |
+| `value` | Double | Según el comando | Velocidad en km/h; controles binarios `0/1`; `SET_TURN_SIGNAL`: `0` apagado, `1` izquierda y `2` derecha; temperatura: `16-30` °C; ventilador: entero `0-7`; climatizador: modo `0` AUTO, `1` COOL, `2` HEAT |
+| `routeId` | Long | Solo para `START` | ID de una ruta previamente creada; obligatorio al iniciar |
+| `originLat`, `originLon`, `destLat`, `destLon` | Double | No | Se derivan de la ruta seleccionada; no se deben enviar manualmente |
 
-**Si no se envían coordenadas**, se usa el trayecto por defecto Cox → Murcia.
+La velocidad simula aceleración y frenado graduales y no supera el menor valor entre el máximo
+configurado del vehículo y el límite de la vía para cada segmento. La energía se consume según
+la distancia y el consumo configurado; al cruzar el 10% se genera una alerta `LOW_ENERGY`.
 
 **Respuesta 200:**
 
@@ -400,6 +504,48 @@ Envía un comando a un vehículo.
 { "command": "STOP", "value": null }
 ```
 
+**Control de velocidad de la simulación** (respetando el límite `maxSpeed` configurado):
+```json
+{ "command": "SET_SPEED", "value": 60 }
+```
+`INCREASE_SPEED` y `DECREASE_SPEED` aceptan el tamaño del paso en km/h (`10` por defecto). `SET_SPEED` con valor `0` detiene temporalmente el movimiento; un nuevo valor positivo lo reanuda.
+
+**Frenada de emergencia simulada** (detiene la simulación de inmediato):
+```json
+{ "command": "EMERGENCY_BRAKE", "value": null }
+```
+
+**Controles simulados del vehículo** (solo cambian el estado del vehículo virtual):
+```json
+{ "command": "SET_IGNITION", "value": 1 }
+{ "command": "SET_HEADLIGHTS", "value": 1 }
+{ "command": "SET_HIGH_BEAMS", "value": 1 }
+{ "command": "SET_HAZARD_LIGHTS", "value": 1 }
+{ "command": "SET_TURN_SIGNAL", "value": 2 }
+{ "command": "SET_WIPERS", "value": 1 }
+{ "command": "SET_CLIMATE_POWER", "value": 1 }
+{ "command": "SET_CLIMATE_TEMPERATURE", "value": 20 }
+{ "command": "SET_CLIMATE_FAN_SPEED", "value": 4 }
+{ "command": "SET_CLIMATE_MODE", "value": 1 }
+```
+El modo acepta `0` AUTO, `1` COOL y `2` HEAT; la temperatura debe estar entre `16` y `30` °C y el ventilador es un nivel entero de `0` a `7`.
+Apagar el encendido detiene la simulación en marcha; para iniciarla de nuevo hay que volver a encenderlo. El estado actual, incluido `climateOn`, `climateTemperatureC`, `climateFanSpeed` y `climateMode`, se consulta en `GET /api/v1/vehicles/{vehicleId}/aaos/control-state` y se publica en `/topic/vehicles/{vehicleId}/control-state`. Este estado vive en memoria y vuelve a los valores iniciales al reiniciar el backend.
+
+#### `POST /api/v1/fleet/commands`
+
+Envía una acción a todos los vehículos registrados. Cada vehículo se valida individualmente; una petición puede tener éxito parcial. La respuesta es `202` si se aceptó para toda la flota o `207` si algunos vehículos la rechazaron, e indica el motivo para cada uno.
+
+```json
+{ "command": "START" }
+```
+
+#### Canales WebSocket de AAOS
+
+- `/topic/vehicles/{vehicleId}/aaos/telemetry` — instantáneas recién recibidas.
+- `/topic/vehicles/{vehicleId}/aaos/notifications` — avisos para la pantalla del vehículo.
+- `/topic/vehicles/{vehicleId}/commands` — órdenes dirigidas a la simulación y etiquetadas `SIMULATOR_ONLY`.
+- `/topic/vehicles/{vehicleId}/control-state` — estado actualizado de los controles simulados.
+
 **START con coordenadas personalizadas:**
 ```json
 {
@@ -439,7 +585,7 @@ Devuelve el historial de comandos del vehículo.
 
 ---
 
-### 2.5. Resto de recursos REST
+### 2.6. Resto de recursos REST
 
 Todos estos endpoints están descritos con sus DTO, parámetros, validaciones y errores en el contrato OpenAPI.
 

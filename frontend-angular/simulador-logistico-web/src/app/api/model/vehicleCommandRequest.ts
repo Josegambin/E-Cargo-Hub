@@ -13,7 +13,11 @@ import { ExecutableVehicleCommandType } from './executableVehicleCommandType';
 export interface VehicleCommandRequest { 
     command: ExecutableVehicleCommandType;
     /**
-     * Valor asociado al comando. Por ejemplo, velocidad objetivo para SET_SPEED. 
+     * Debe especificarse para START; ruta previamente creada en el backend.
+     */
+    routeId?: number | null;
+    /**
+     * Valor asociado al comando. Velocidad en km/h para SET_SPEED; 0 o 1 para encendido, luces y limpiaparabrisas; 0 (apagado), 1 (intermitente izquierdo) o 2 (derecho) para SET_TURN_SIGNAL; climatizador: potencia 0/1, temperatura 16-30 °C, ventilador 0-7, modo 0 (AUTO), 1 (COOL) o 2 (HEAT).
      */
     value?: number | null;
     originLat?: number | null;
@@ -23,5 +27,4 @@ export interface VehicleCommandRequest {
 }
 export namespace VehicleCommandRequest {
 }
-
 

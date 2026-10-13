@@ -91,6 +91,17 @@ constructor({ accessToken, apiKeys, basePath, credentials, encodeParam, encoder,
         }
         this.encodeParam = encodeParam ?? (param => this.defaultEncodeParam(param));
         this.credentials = credentials ?? {};
+
+        // init default ControlToken credential
+        if (!this.credentials['ControlToken']) {
+            this.credentials['ControlToken'] = () => {
+                if (this.apiKeys === null || this.apiKeys === undefined) {
+                    return undefined;
+                } else {
+                    return this.apiKeys['ControlToken'] || this.apiKeys['X-Control-Token'];
+                }
+            };
+        }
     }
 
     /**

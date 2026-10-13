@@ -7,6 +7,7 @@
  * https://openapi-generator.tech
  * Do not edit the class manually.
  */
+import { VehicleEnergyType } from './vehicleEnergyType';
 
 
 export interface VehicleStatusDto { 
@@ -15,10 +16,14 @@ export interface VehicleStatusDto {
     longitude?: number | null;
     progress: number;
     speedKmh: number;
+    energyPercent?: number | null;
+    energyType?: VehicleEnergyType | null;
+    gearPosition?: string | null;
     /**
      * Estado actual del vehículo
      */
     status: string;
     updatedAt?: string | null;
 }
-
+export namespace VehicleStatusDto {
+}

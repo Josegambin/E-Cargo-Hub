@@ -9,6 +9,7 @@
  */
 import { VehiclePosition } from './vehiclePosition';
 import { VehicleType } from './vehicleType';
+import { VehicleEnergyType } from './vehicleEnergyType';
 import { VehicleStatus } from './vehicleStatus';
 
 
@@ -17,6 +18,10 @@ export interface Vehicle {
     name: string;
     type: VehicleType;
     maxSpeed: number;
+    energyType?: VehicleEnergyType;
+    energyCapacity?: number;
+    energyConsumptionPer100?: number;
+    energyPercent?: number;
     status: VehicleStatus;
     currentPosition?: VehiclePosition | null;
 }

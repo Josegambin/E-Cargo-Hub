@@ -28,6 +28,15 @@ public class VehicleCurrentStatusEntity {
     @Column(name = "speed_kmh", nullable = false)
     private Double speedKmh;
 
+    @Column(name = "energy_percent")
+    private Double energyPercent;
+
+    @Column(name = "energy_type", length = 24)
+    private String energyType;
+
+    @Column(name = "gear_position", length = 8)
+    private String gearPosition;
+
     @Column(nullable = false, length = 32)
     private String status;
 

@@ -1,6 +1,7 @@
 package com.ecargohub.backend.service;
 
 import com.ecargohub.backend.dto.status.VehicleStatusDto;
+import com.ecargohub.backend.domain.enums.VehicleEnergyTypeEnum;
 import com.ecargohub.backend.entity.VehicleCurrentStatusEntity;
 import com.ecargohub.backend.repository.VehicleCurrentStatusRepository;
 import org.springframework.stereotype.Service;
@@ -25,6 +26,12 @@ public class VehicleStatusService {
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void updateStatus(Long vehicleId, Double lat, Double lon, Integer progress, Double speed, String status) {
+        updateStatus(vehicleId, lat, lon, progress, speed, status, null, null, null);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    public void updateStatus(Long vehicleId, Double lat, Double lon, Integer progress, Double speed, String status,
+            Double energyPercent, VehicleEnergyTypeEnum energyType, String gearPosition) {
         VehicleCurrentStatusEntity entity = repository.findById(vehicleId).orElseGet(() -> {
             VehicleCurrentStatusEntity e = new VehicleCurrentStatusEntity();
             e.setVehicleId(vehicleId);
@@ -35,13 +42,25 @@ public class VehicleStatusService {
         entity.setProgress(progress);
         entity.setSpeedKmh(speed);
         entity.setStatus(status);
+        if (energyPercent != null) {
+            entity.setEnergyPercent(energyPercent);
+        }
+        if (energyType != null) {
+            entity.setEnergyType(energyType.name());
+        }
+        if (gearPosition != null) {
+            entity.setGearPosition(gearPosition);
+        }
         entity.setUpdatedAt(OffsetDateTime.now());
         repository.save(entity);
     }
 
     @Transactional(readOnly = true)
     public Optional<VehicleStatusDto> getStatus(Long vehicleId) {
-        return repository.findById(vehicleId).map(e -> new VehicleStatusDto(e.getVehicleId(), e.getLatitude(),
-                e.getLongitude(), e.getProgress(), e.getSpeedKmh(), e.getStatus(), e.getUpdatedAt()));
+        return repository.findById(vehicleId)
+                .map(e -> new VehicleStatusDto(e.getVehicleId(), e.getLatitude(), e.getLongitude(), e.getProgress(),
+                        e.getSpeedKmh(), e.getEnergyPercent(),
+                        e.getEnergyType() == null ? null : VehicleEnergyTypeEnum.valueOf(e.getEnergyType()),
+                        e.getGearPosition(), e.getStatus(), e.getUpdatedAt()));
     }
 }

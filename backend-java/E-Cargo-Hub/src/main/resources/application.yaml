@@ -51,6 +51,9 @@ spring:
 # CORS (namespace propio, NO dentro de spring)
 # ==========================================
 app:
+  security:
+    control-token: ${ECARGO_CONTROL_API_TOKEN:}
+  mobile-app-url: ${ECARGO_MOBILE_APP_URL:http://localhost:4200/vehicle-display}
   cors:
     allowed-origins: >
       http://localhost:4200,

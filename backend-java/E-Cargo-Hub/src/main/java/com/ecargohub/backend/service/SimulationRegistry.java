@@ -1,11 +1,14 @@
 package com.ecargohub.backend.service;
 
 import com.ecargohub.backend.domain.enums.VehicleStatusEnum;
+import com.ecargohub.backend.domain.enums.VehicleCommandTypeEnum;
+import com.ecargohub.backend.dto.vehicle.VehicleControlStateDto;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Map;
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 
@@ -15,6 +18,69 @@ public class SimulationRegistry {
     private static final Logger log = LoggerFactory.getLogger(SimulationRegistry.class);
 
     private final Map<Long, SimulationHandle> active = new ConcurrentHashMap<>();
+    private final Map<Long, VehicleControlStateDto> controls = new ConcurrentHashMap<>();
+    private final Map<Long, List<double[]>> routes = new ConcurrentHashMap<>();
+
+    public void setRouteCoordinates(Long vehicleId, List<double[]> coordinates) {
+        routes.put(vehicleId, copyCoordinates(coordinates));
+    }
+
+    public List<double[]> getRouteCoordinates(Long vehicleId) {
+        return copyCoordinates(routes.getOrDefault(vehicleId, List.of()));
+    }
+
+    private List<double[]> copyCoordinates(List<double[]> coordinates) {
+        return coordinates.stream().map(double[]::clone).toList();
+    }
+
+    public VehicleControlStateDto getControls(Long vehicleId) {
+        return controls.computeIfAbsent(vehicleId, this::defaultControls);
+    }
+
+    public VehicleControlStateDto updateControl(Long vehicleId, VehicleCommandTypeEnum command, double value) {
+        return controls.compute(vehicleId, (id, current) -> {
+            VehicleControlStateDto state = current == null ? defaultControls(id) : current;
+            return switch (command) {
+            case SET_IGNITION -> new VehicleControlStateDto(id, value == 1.0, state.headlightsOn(), state.highBeamsOn(),
+                    state.hazardLightsOn(), state.turnSignal(), state.wipersOn(), state.climateOn(),
+                    state.climateTemperatureC(), state.climateFanSpeed(), state.climateMode());
+            case SET_HEADLIGHTS -> new VehicleControlStateDto(id, state.ignitionOn(), value == 1.0, state.highBeamsOn(),
+                    state.hazardLightsOn(), state.turnSignal(), state.wipersOn(), state.climateOn(),
+                    state.climateTemperatureC(), state.climateFanSpeed(), state.climateMode());
+            case SET_HIGH_BEAMS -> new VehicleControlStateDto(id, state.ignitionOn(), state.headlightsOn(),
+                    value == 1.0, state.hazardLightsOn(), state.turnSignal(), state.wipersOn(), state.climateOn(),
+                    state.climateTemperatureC(), state.climateFanSpeed(), state.climateMode());
+            case SET_HAZARD_LIGHTS -> new VehicleControlStateDto(id, state.ignitionOn(), state.headlightsOn(),
+                    state.highBeamsOn(), value == 1.0, state.turnSignal(), state.wipersOn(), state.climateOn(),
+                    state.climateTemperatureC(), state.climateFanSpeed(), state.climateMode());
+            case SET_TURN_SIGNAL -> new VehicleControlStateDto(id, state.ignitionOn(), state.headlightsOn(),
+                    state.highBeamsOn(), state.hazardLightsOn(), value == 1.0 ? "LEFT" : value == 2.0 ? "RIGHT" : "OFF",
+                    state.wipersOn(), state.climateOn(), state.climateTemperatureC(), state.climateFanSpeed(),
+                    state.climateMode());
+            case SET_WIPERS -> new VehicleControlStateDto(id, state.ignitionOn(), state.headlightsOn(),
+                    state.highBeamsOn(), state.hazardLightsOn(), state.turnSignal(), value == 1.0, state.climateOn(),
+                    state.climateTemperatureC(), state.climateFanSpeed(), state.climateMode());
+            case SET_CLIMATE_POWER -> new VehicleControlStateDto(id, state.ignitionOn(), state.headlightsOn(),
+                    state.highBeamsOn(), state.hazardLightsOn(), state.turnSignal(), state.wipersOn(), value == 1.0,
+                    state.climateTemperatureC(), state.climateFanSpeed(), state.climateMode());
+            case SET_CLIMATE_TEMPERATURE -> new VehicleControlStateDto(id, state.ignitionOn(), state.headlightsOn(),
+                    state.highBeamsOn(), state.hazardLightsOn(), state.turnSignal(), state.wipersOn(),
+                    state.climateOn(), value, state.climateFanSpeed(), state.climateMode());
+            case SET_CLIMATE_FAN_SPEED -> new VehicleControlStateDto(id, state.ignitionOn(), state.headlightsOn(),
+                    state.highBeamsOn(), state.hazardLightsOn(), state.turnSignal(), state.wipersOn(),
+                    state.climateOn(), state.climateTemperatureC(), (int) value, state.climateMode());
+            case SET_CLIMATE_MODE -> new VehicleControlStateDto(id, state.ignitionOn(), state.headlightsOn(),
+                    state.highBeamsOn(), state.hazardLightsOn(), state.turnSignal(), state.wipersOn(),
+                    state.climateOn(), state.climateTemperatureC(), state.climateFanSpeed(),
+                    value == 0.0 ? "AUTO" : value == 1.0 ? "COOL" : "HEAT");
+            default -> throw new IllegalArgumentException("Not a vehicle control command: " + command);
+            };
+        });
+    }
+
+    private VehicleControlStateDto defaultControls(Long vehicleId) {
+        return new VehicleControlStateDto(vehicleId, true, false, false, false, "OFF", false, false, 22.0, 0, "AUTO");
+    }
 
     public boolean isRunning(Long vehicleId) {
         SimulationHandle h = active.get(vehicleId);
@@ -61,6 +127,8 @@ public class SimulationRegistry {
         private volatile boolean paused = false;
         private volatile boolean stopped = false;
         private volatile VehicleStatusEnum state = VehicleStatusEnum.EN_RUTA;
+        private volatile Double targetSpeedKmh;
+        private volatile double currentSpeedKmh;
 
         public SimulationHandle(Long vehicleId, Future<?> future) {
             this.vehicleId = vehicleId;
@@ -89,6 +157,22 @@ public class SimulationRegistry {
 
         public void setState(VehicleStatusEnum s) {
             this.state = s;
+        }
+
+        public Double getTargetSpeedKmh() {
+            return targetSpeedKmh;
+        }
+
+        public void setTargetSpeedKmh(double speedKmh) {
+            this.targetSpeedKmh = speedKmh;
+        }
+
+        public double getCurrentSpeedKmh() {
+            return currentSpeedKmh;
+        }
+
+        public void setCurrentSpeedKmh(double speedKmh) {
+            this.currentSpeedKmh = speedKmh;
         }
 
         public void pause() {

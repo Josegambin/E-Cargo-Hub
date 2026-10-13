@@ -13,11 +13,18 @@ public record VehicleCommandRequest(
 
         @Schema(description = "Valor asociado al comando (opcional)", example = "1.0") Double value,
 
-        @Schema(description = "Latitud del origen (opcional, si no se envía usa Cox)", example = "38.1408") @DecimalMin(value = "-90.0", message = "originLat must be >= -90") @DecimalMax(value = "90.0", message = "originLat must be <= 90") Double originLat,
+        @Schema(description = "Latitud del origen (opcional)", example = "38.1408") @DecimalMin(value = "-90.0", message = "originLat must be >= -90") @DecimalMax(value = "90.0", message = "originLat must be <= 90") Double originLat,
 
-        @Schema(description = "Longitud del origen (opcional, si no se envía usa Cox)", example = "-0.8844") @DecimalMin(value = "-180.0", message = "originLon must be >= -180") @DecimalMax(value = "180.0", message = "originLon must be <= 180") Double originLon,
+        @Schema(description = "Longitud del origen (opcional)", example = "-0.8844") @DecimalMin(value = "-180.0", message = "originLon must be >= -180") @DecimalMax(value = "180.0", message = "originLon must be <= 180") Double originLon,
 
-        @Schema(description = "Latitud del destino (opcional, si no se envía usa Murcia)", example = "37.9922") @DecimalMin(value = "-90.0", message = "destLat must be >= -90") @DecimalMax(value = "90.0", message = "destLat must be <= 90") Double destLat,
+        @Schema(description = "Latitud del destino (opcional)", example = "37.9922") @DecimalMin(value = "-90.0", message = "destLat must be >= -90") @DecimalMax(value = "90.0", message = "destLat must be <= 90") Double destLat,
 
-        @Schema(description = "Longitud del destino (opcional, si no se envía usa Murcia)", example = "-1.1307") @DecimalMin(value = "-180.0", message = "destLon must be >= -180") @DecimalMax(value = "180.0", message = "destLon must be <= 180") Double destLon) {
+        @Schema(description = "Longitud del destino (opcional)", example = "-1.1307") @DecimalMin(value = "-180.0", message = "destLon must be >= -180") @DecimalMax(value = "180.0", message = "destLon must be <= 180") Double destLon,
+
+        @Schema(description = "ID de una ruta registrada, obligatorio para START", example = "3") Long routeId) {
+
+    public VehicleCommandRequest(VehicleCommandTypeEnum command, Double value, Double originLat, Double originLon,
+            Double destLat, Double destLon) {
+        this(command, value, originLat, originLon, destLat, destLon, null);
+    }
 }

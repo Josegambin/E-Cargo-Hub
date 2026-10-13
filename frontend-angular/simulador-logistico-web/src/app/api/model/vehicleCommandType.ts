@@ -18,6 +18,16 @@ export const VehicleCommandType = {
     IncreaseSpeed: 'INCREASE_SPEED',
     DecreaseSpeed: 'DECREASE_SPEED',
     EmergencyBrake: 'EMERGENCY_BRAKE',
+    SetIgnition: 'SET_IGNITION',
+    SetHeadlights: 'SET_HEADLIGHTS',
+    SetHighBeams: 'SET_HIGH_BEAMS',
+    SetHazardLights: 'SET_HAZARD_LIGHTS',
+    SetTurnSignal: 'SET_TURN_SIGNAL',
+    SetWipers: 'SET_WIPERS',
+    SetClimatePower: 'SET_CLIMATE_POWER',
+    SetClimateTemperature: 'SET_CLIMATE_TEMPERATURE',
+    SetClimateFanSpeed: 'SET_CLIMATE_FAN_SPEED',
+    SetClimateMode: 'SET_CLIMATE_MODE',
 } as const;
 export type VehicleCommandType = typeof VehicleCommandType[keyof typeof VehicleCommandType];
 

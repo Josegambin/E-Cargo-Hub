@@ -10,10 +10,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 
 @Service
 public class GraphHopperService {
@@ -44,12 +44,12 @@ public class GraphHopperService {
     }
 
     /**
-     * Devuelve la ruta entre dos puntos. 1. Si está en caché, la sirve al instante (sin llamar a la API). 2. Si no,
-     * llama a GraphHopper. 3. Si GraphHopper falla, aplica fallback lineal y lo cachea también.
+     * Uses the vehicle's configured maximum speed only where GraphHopper explicitly returns null.
      */
-    public RouteResponseDto calculateRoute(double startLat, double startLon, double endLat, double endLon) {
+    public RouteResponseDto calculateRoute(double startLat, double startLon, double endLat, double endLon,
+            double vehicleMaxSpeedKmh) {
 
-        String cacheKey = cacheKey(startLat, startLon, endLat, endLon);
+        String cacheKey = cacheKey(startLat, startLon, endLat, endLon, vehicleMaxSpeedKmh);
 
         // 1. Intentar desde caché
         RouteResponseDto cached = routeCache.get(cacheKey);
@@ -65,7 +65,8 @@ public class GraphHopperService {
             JsonNode response = restClient.get()
                     .uri(uriBuilder -> uriBuilder.path("/route").queryParam("point", startLat + "," + startLon)
                             .queryParam("point", endLat + "," + endLon).queryParam("profile", "car")
-                            .queryParam("points_encoded", "false").queryParam("key", apiKey).build())
+                            .queryParam("points_encoded", "false").queryParam("instructions", "false")
+                            .queryParam("details", "max_speed").queryParam("key", apiKey).build())
                     .retrieve().body(JsonNode.class);
 
             if (response != null && response.has("paths")) {
@@ -76,49 +77,112 @@ public class GraphHopperService {
                 List<double[]> coordinates = new ArrayList<>();
                 JsonNode points = path.get("points").get("coordinates");
                 for (JsonNode point : points) {
-                    // GraphHopper responde [lon, lat]; lo invertimos a [lat, lon]
                     coordinates.add(new double[] { point.get(1).asDouble(), point.get(0).asDouble() });
                 }
 
-                RouteResponseDto route = new RouteResponseDto(coordinates, distance, time);
+                JsonNode speedDetails = path.path("details").path("max_speed");
+                int fallbackSegments = countNullSpeedLimitSegments(speedDetails);
+                List<Double> speedLimits = extractSpeedLimits(speedDetails, coordinates.size() - 1, vehicleMaxSpeedKmh);
+                if (fallbackSegments > 0) {
+                    log.warn("GraphHopper returned max_speed=null for {} route segments; using the vehicle maximum "
+                            + "of {} km/h for those segments", fallbackSegments, vehicleMaxSpeedKmh);
+                }
+                RouteResponseDto route = new RouteResponseDto(coordinates, distance, time, speedLimits);
 
-                // 3. Guardar en caché
                 routeCache.put(cacheKey, route);
                 log.info("✅ Ruta GraphHopper cacheada: {} ({} puntos, {}m)", cacheKey, coordinates.size(), distance);
 
                 return route;
             }
 
-            log.warn("⚠️ GraphHopper devolvió respuesta sin paths. Aplicando fallback lineal.");
+            throw new IllegalStateException("GraphHopper did not return a routed path");
 
+        } catch (IllegalStateException e) {
+            log.error("❌ Unable to calculate a route with per-road speed limits: {}", e.getMessage());
+            throw new IllegalStateException("Route unavailable: " + e.getMessage(), e);
         } catch (Exception e) {
-            log.error("❌ Error en GraphHopper: {}. Aplicando fallback lineal.", e.getMessage());
+            log.error("❌ Unable to calculate a route with per-road speed limits: {}", e.getMessage());
+            throw new IllegalStateException("Could not calculate route from GraphHopper: " + e.getMessage(), e);
         }
-
-        // 4. Fallback lineal (también cacheado para no reintentar sin parar)
-        RouteResponseDto fallback = buildLinearRoute(startLat, startLon, endLat, endLon);
-        routeCache.put(cacheKey, fallback);
-        log.warn("💾 Fallback lineal cacheado: {}", cacheKey);
-        return fallback;
     }
 
-    /**
-     * Genera una ruta lineal entre origen y destino con 21 puntos.
-     */
-    private RouteResponseDto buildLinearRoute(double startLat, double startLon, double endLat, double endLon) {
-        log.warn("🛰️ Generando ruta lineal de [{}, {}] a [{}, {}]", startLat, startLon, endLat, endLon);
-
-        List<double[]> points = new ArrayList<>();
-        int steps = 20;
-        for (int i = 0; i <= steps; i++) {
-            double pct = (double) i / steps;
-            points.add(new double[] { startLat + (endLat - startLat) * pct, startLon + (endLon - startLon) * pct });
-        }
-        return new RouteResponseDto(points, 0.0, 0.0);
+    static List<Double> extractSpeedLimits(JsonNode details, int segmentCount) {
+        return extractSpeedLimits(details, segmentCount, Double.NaN);
     }
 
-    private String cacheKey(double a, double b, double c, double d) {
-        return String.format("%.4f,%.4f->%.4f,%.4f", a, b, c, d);
+    static List<Double> extractSpeedLimits(JsonNode details, int segmentCount, double vehicleMaxSpeedKmh) {
+        if (segmentCount < 1 || !details.isArray() || details.isEmpty()) {
+            throw new IllegalStateException("Route has no max_speed details");
+        }
+
+        Double[] limits = new Double[segmentCount];
+        for (JsonNode detail : details) {
+            if (!detail.isArray() || detail.size() < 3 || !detail.get(0).canConvertToInt()
+                    || !detail.get(1).canConvertToInt()) {
+                throw new IllegalStateException("Route contains an invalid max_speed detail: " + detail);
+            }
+            int from = detail.get(0).asInt();
+            int to = detail.get(1).asInt();
+            JsonNode rawLimit = detail.get(2);
+            double limit;
+            if (rawLimit.isNull()) {
+                if (!Double.isFinite(vehicleMaxSpeedKmh) || vehicleMaxSpeedKmh <= 0) {
+                    throw new IllegalStateException(
+                            "Route contains a null max_speed and no valid vehicle maximum " + "speed fallback");
+                }
+                limit = vehicleMaxSpeedKmh;
+            } else {
+                limit = parseSpeedLimit(rawLimit);
+            }
+            if (!Double.isFinite(limit) || limit <= 0 || from < 0 || to > segmentCount || from >= to) {
+                throw new IllegalStateException("Route contains an invalid max_speed range");
+            }
+            for (int segment = from; segment < to; segment++) {
+                limits[segment] = limit;
+            }
+        }
+        for (Double limit : limits) {
+            if (limit == null) {
+                throw new IllegalStateException("At least one road segment has no max_speed data");
+            }
+        }
+        return List.of(limits);
+    }
+
+    private static int countNullSpeedLimitSegments(JsonNode details) {
+        int segmentCount = 0;
+        for (JsonNode detail : details) {
+            if (detail.isArray() && detail.size() >= 3 && detail.get(2).isNull() && detail.get(0).canConvertToInt()
+                    && detail.get(1).canConvertToInt()) {
+                segmentCount += Math.max(0, detail.get(1).asInt() - detail.get(0).asInt());
+            }
+        }
+        return segmentCount;
+    }
+
+    private static double parseSpeedLimit(JsonNode value) {
+        if (value.isNumber()) {
+            return value.asDouble();
+        }
+        if (value.isString()) {
+            try {
+                return Double.parseDouble(value.asString().trim());
+            } catch (NumberFormatException e) {
+                throw nonNumericSpeedLimit(value, e);
+            }
+        }
+        throw nonNumericSpeedLimit(value, null);
+    }
+
+    private static IllegalStateException nonNumericSpeedLimit(JsonNode value, Exception cause) {
+        String type = value == null ? "missing" : value.getNodeType().toString();
+        String rawValue = value == null ? "<missing>" : value.toString();
+        String message = "Route contains a non-numeric max_speed value (type=" + type + ", value=" + rawValue + ")";
+        return cause == null ? new IllegalStateException(message) : new IllegalStateException(message, cause);
+    }
+
+    private String cacheKey(double a, double b, double c, double d, double vehicleMaxSpeedKmh) {
+        return String.format("%.4f,%.4f->%.4f,%.4f|max=%s", a, b, c, d, Double.toString(vehicleMaxSpeedKmh));
     }
 
     /**

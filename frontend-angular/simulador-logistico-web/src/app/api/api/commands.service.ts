@@ -40,6 +40,80 @@ export class CommandsService extends BaseService {
     }
 
     /**
+     * Controlar la simulación asignada al vehículo AAOS
+     * Estas acciones afectan solo al vehículo simulado en el backend; nunca se envían a actuadores físicos.
+     * @endpoint post /api/v1/vehicles/{vehicleId}/aaos/simulated-commands
+     * @param vehicleId Identificador del vehículo
+     * @param vehicleCommandRequest
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public commandAaosLinkedSimulation(vehicleId: number, vehicleCommandRequest: VehicleCommandRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<VehicleCommand>;
+    public commandAaosLinkedSimulation(vehicleId: number, vehicleCommandRequest: VehicleCommandRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<VehicleCommand>>;
+    public commandAaosLinkedSimulation(vehicleId: number, vehicleCommandRequest: VehicleCommandRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<VehicleCommand>>;
+    public commandAaosLinkedSimulation(vehicleId: number, vehicleCommandRequest: VehicleCommandRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (vehicleId === null || vehicleId === undefined) {
+            throw new Error('Required parameter vehicleId was null or undefined when calling commandAaosLinkedSimulation.');
+        }
+        if (vehicleCommandRequest === null || vehicleCommandRequest === undefined) {
+            throw new Error('Required parameter vehicleCommandRequest was null or undefined when calling commandAaosLinkedSimulation.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (ControlToken) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('ControlToken', 'X-Control-Token', localVarHeaders);
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/vehicles/${this.configuration.encodeParam({name: "vehicleId", value: vehicleId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/aaos/simulated-commands`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<VehicleCommand>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: vehicleCommandRequest,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
      * Obtener el historial de comandos de un vehículo
      * @endpoint get /api/v1/vehicles/{vehicleId}/commands
      * @param vehicleId Identificador del vehículo
@@ -117,6 +191,9 @@ export class CommandsService extends BaseService {
         }
 
         let localVarHeaders = this.defaultHeaders;
+
+        // authentication (ControlToken) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('ControlToken', 'X-Control-Token', localVarHeaders);
 
         const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
             'application/json'

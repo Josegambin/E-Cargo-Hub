@@ -8,12 +8,20 @@
  * Do not edit the class manually.
  */
 import { VehicleType } from './vehicleType';
+import { VehicleEnergyType } from './vehicleEnergyType';
 
 
 export interface UpdateVehicleRequest { 
     name: string;
     type: VehicleType;
     maxSpeed: number;
+    energyType?: VehicleEnergyType;
+    energyCapacity?: number;
+    energyConsumptionPer100?: number;
+    /**
+     * Energía actual en kWh o litros; puede usarse para recargar o repostar desde el backend.
+     */
+    remainingEnergy?: number;
 }
 export namespace UpdateVehicleRequest {
 }

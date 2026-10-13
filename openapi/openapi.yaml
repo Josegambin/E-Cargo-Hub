@@ -41,6 +41,12 @@ tags:
   - name: Commands
     description: Comandos enviados a vehículos
 
+  - name: AAOS
+    description: Integración de telemetría y avisos con Android Automotive OS
+
+  - name: Fleet
+    description: Operaciones sobre todos los vehículos simulados
+
   - name: Positions
     description: Posiciones de vehículos
 
@@ -49,6 +55,9 @@ tags:
 
   - name: Telemetry
     description: Histórico de telemetría de vehículos
+
+  - name: Vehicle devices
+    description: Vinculación de dispositivos de visualización de solo lectura
 
 
 paths:
@@ -111,6 +120,39 @@ paths:
 
         '400':
           $ref: '#/components/responses/BadRequest'
+
+  /api/v1/fleet/commands:
+
+    post:
+      security:
+        - ControlToken: []
+      tags:
+        - Fleet
+      summary: Enviar un comando a todos los vehículos simulados
+      operationId: commandAllVehicles
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FleetCommandRequest'
+      responses:
+        '401':
+          description: Falta el token de control o no es válido
+        '503':
+          description: El backend no tiene configurado el token de control
+        '202':
+          description: El comando se aceptó para toda la flota
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FleetCommandResult'
+        '207':
+          description: El comando se aceptó parcialmente; se detallan los vehículos rechazados
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FleetCommandResult'
 
 
   /api/v1/vehicles/{vehicleId}:
@@ -529,6 +571,8 @@ paths:
   /api/v1/simulations/{simulationId}/start:
 
     post:
+      security:
+        - ControlToken: []
       tags:
         - Simulations
 
@@ -540,6 +584,12 @@ paths:
         - $ref: '#/components/parameters/SimulationId'
 
       responses:
+
+        '401':
+          description: Falta el token de control o no es válido
+
+        '503':
+          description: El backend no tiene configurado el token de control
 
         '200':
           description: Simulación iniciada
@@ -556,6 +606,8 @@ paths:
   /api/v1/simulations/{simulationId}/pause:
 
     post:
+      security:
+        - ControlToken: []
       tags:
         - Simulations
 
@@ -567,6 +619,12 @@ paths:
         - $ref: '#/components/parameters/SimulationId'
 
       responses:
+
+        '401':
+          description: Falta el token de control o no es válido
+
+        '503':
+          description: El backend no tiene configurado el token de control
 
         '200':
           description: Simulación pausada
@@ -580,6 +638,8 @@ paths:
   /api/v1/simulations/{simulationId}/resume:
 
     post:
+      security:
+        - ControlToken: []
       tags:
         - Simulations
 
@@ -591,6 +651,12 @@ paths:
         - $ref: '#/components/parameters/SimulationId'
 
       responses:
+
+        '401':
+          description: Falta el token de control o no es válido
+
+        '503':
+          description: El backend no tiene configurado el token de control
 
         '200':
           description: Simulación reanudada
@@ -604,6 +670,8 @@ paths:
   /api/v1/simulations/{simulationId}/stop:
 
     post:
+      security:
+        - ControlToken: []
       tags:
         - Simulations
 
@@ -615,6 +683,12 @@ paths:
         - $ref: '#/components/parameters/SimulationId'
 
       responses:
+
+        '401':
+          description: Falta el token de control o no es válido
+
+        '503':
+          description: El backend no tiene configurado el token de control
 
         '200':
           description: Simulación detenida
@@ -632,6 +706,8 @@ paths:
   /api/v1/vehicles/{vehicleId}/commands:
 
     post:
+      security:
+        - ControlToken: []
       tags:
         - Commands
 
@@ -658,6 +734,12 @@ paths:
               $ref: '#/components/schemas/VehicleCommandRequest'
 
       responses:
+
+        '401':
+          description: Falta el token de control o no es válido
+
+        '503':
+          description: El backend no tiene configurado el token de control
 
         '200':
           description: Comando guardado y publicado
@@ -751,6 +833,74 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VehicleStatusDto'
+
+  /api/v1/vehicles/{vehicleId}/device-enrollments:
+    post:
+      security:
+        - ControlToken: []
+      tags:
+        - Vehicle devices
+      summary: Crear un código de vinculación de un solo uso para una pantalla
+      operationId: createVehicleDeviceEnrollment
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      responses:
+        '201':
+          description: Código válido durante diez minutos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleDeviceEnrollment'
+        '401':
+          description: Token de control ausente o no válido
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '503':
+          description: Token de control no configurado
+
+  /api/v1/device-enrollments/claim:
+    post:
+      tags:
+        - Vehicle devices
+      summary: Reclamar un código de vinculación y obtener credencial de solo lectura
+      operationId: claimVehicleDeviceEnrollment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleDeviceClaimRequest'
+      responses:
+        '201':
+          description: Dispositivo vinculado; el token solo permite consultar su estado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleDeviceClaim'
+        '401':
+          description: Código vencido, inválido o ya utilizado
+
+  /api/v1/device/state:
+    get:
+      tags:
+        - Vehicle devices
+      summary: Obtener estado de solo lectura del vehículo vinculado
+      operationId: getVehicleDeviceState
+      parameters:
+        - name: X-Vehicle-Device-Token
+          in: header
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Estado de simulación y controles del vehículo vinculado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleDisplayState'
+        '401':
+          description: Credencial de dispositivo ausente, inválida o revocada
 
   /api/v1/vehicles/{vehicleId}/telemetry:
 
@@ -852,6 +1002,140 @@ paths:
                 items:
                   $ref: '#/components/schemas/TelemetryPoint'
 
+  /api/v1/vehicles/{vehicleId}/aaos/telemetry:
+
+    post:
+      tags:
+        - AAOS
+      summary: Recibir una instantánea de sensores AAOS
+      operationId: receiveAaosTelemetry
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AaosTelemetryRequest'
+      responses:
+        '201':
+          description: Instantánea guardada y emitida por WebSocket
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AaosTelemetry'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/vehicles/{vehicleId}/aaos/telemetry/latest:
+
+    get:
+      tags:
+        - AAOS
+      summary: Consultar las últimas lecturas de sensores AAOS
+      operationId: getLatestAaosTelemetry
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+            maximum: 500
+      responses:
+        '200':
+          description: Instantáneas más recientes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/AaosTelemetry'
+
+  /api/v1/vehicles/{vehicleId}/aaos/control-state:
+
+    get:
+      tags:
+        - AAOS
+      summary: Consultar el estado actual de los controles simulados
+      operationId: getAaosVehicleControlState
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      responses:
+        '200':
+          description: Estado de encendido, luces, intermitentes y limpiaparabrisas de la simulación
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleControlState'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/vehicles/{vehicleId}/aaos/notifications:
+
+    post:
+      tags:
+        - AAOS
+      summary: Mostrar un aviso en la pantalla del vehículo
+      operationId: notifyAaosVehicle
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AaosNotificationRequest'
+      responses:
+        '202':
+          description: Aviso enviado a los suscriptores AAOS
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AaosNotification'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/vehicles/{vehicleId}/aaos/simulated-commands:
+
+    post:
+      security:
+        - ControlToken: []
+      tags:
+        - AAOS
+        - Commands
+      summary: Controlar la simulación asignada al vehículo AAOS
+      description: Estas acciones afectan solo al vehículo simulado en el backend; nunca se envían a actuadores físicos.
+      operationId: commandAaosLinkedSimulation
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleCommandRequest'
+      responses:
+        '401':
+          description: Falta el token de control o no es válido
+        '503':
+          description: El backend no tiene configurado el token de control
+        '202':
+          description: Comando de simulación aceptado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleCommand'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          description: Comando no permitido en el estado actual de la simulación
 
 
   # ============================================================
@@ -908,6 +1192,12 @@ paths:
 # ================================================================
 
 components:
+
+  securitySchemes:
+    ControlToken:
+      type: apiKey
+      in: header
+      name: X-Control-Token
 
   # ============================================================
   # PARAMETERS
@@ -998,6 +1288,25 @@ components:
           minimum: 0
           example: 120
 
+        energyType:
+          $ref: '#/components/schemas/VehicleEnergyType'
+
+        energyCapacity:
+          type: number
+          format: double
+          minimum: 0
+
+        energyConsumptionPer100:
+          type: number
+          format: double
+          minimum: 0
+
+        energyPercent:
+          type: number
+          format: double
+          minimum: 0
+          maximum: 100
+
         status:
           $ref: '#/components/schemas/VehicleStatus'
 
@@ -1014,6 +1323,9 @@ components:
         - name
         - type
         - maxSpeed
+        - energyType
+        - energyCapacity
+        - energyConsumptionPer100
 
       properties:
 
@@ -1031,6 +1343,21 @@ components:
           format: double
           minimum: 0
           example: 120
+
+        energyType:
+          $ref: '#/components/schemas/VehicleEnergyType'
+
+        energyCapacity:
+          type: number
+          format: double
+          exclusiveMinimum: 0
+          description: Capacidad en kWh para batería o litros para combustible.
+
+        energyConsumptionPer100:
+          type: number
+          format: double
+          exclusiveMinimum: 0
+          description: Consumo por cada 100 km (kWh o litros, según energyType).
 
 
     UpdateVehicleRequest:
@@ -1055,6 +1382,29 @@ components:
           type: number
           format: double
           minimum: 0
+
+        energyType:
+          $ref: '#/components/schemas/VehicleEnergyType'
+
+        energyCapacity:
+          type: number
+          format: double
+          exclusiveMinimum: 0
+
+        energyConsumptionPer100:
+          type: number
+          format: double
+          exclusiveMinimum: 0
+
+        remainingEnergy:
+          type: number
+          format: double
+          minimum: 0
+          description: Energía actual en kWh o litros; puede usarse para recargar o repostar desde el backend.
+
+    VehicleEnergyType:
+      type: string
+      enum: [BATTERY_ELECTRIC, FUEL]
 
 
     VehicleType:
@@ -1114,6 +1464,23 @@ components:
           type: number
           format: double
           minimum: 0
+
+        energyPercent:
+          type: number
+          format: double
+          nullable: true
+          minimum: 0
+          maximum: 100
+
+        energyType:
+          allOf:
+            - $ref: '#/components/schemas/VehicleEnergyType'
+          nullable: true
+
+        gearPosition:
+          type: string
+          nullable: true
+          example: D3
 
         status:
           type: string
@@ -1530,13 +1897,22 @@ components:
         command:
           $ref: '#/components/schemas/ExecutableVehicleCommandType'
 
+        routeId:
+          type: integer
+          format: int64
+          nullable: true
+          description: Debe especificarse para START; ruta previamente creada en el backend.
+
         value:
           type: number
           format: double
           nullable: true
           description: |
-            Valor asociado al comando.
-            Por ejemplo, velocidad objetivo para SET_SPEED.
+            Valor asociado al comando. Velocidad en km/h para SET_SPEED;
+            0 o 1 para encendido, luces y limpiaparabrisas; 0 (apagado),
+            1 (intermitente izquierdo) o 2 (derecho) para SET_TURN_SIGNAL;
+            climatizador: potencia 0/1, temperatura 16-30 °C, ventilador 0-7,
+            modo 0 (AUTO), 1 (COOL) o 2 (HEAT).
           example: 80
 
         originLat:
@@ -1637,15 +2013,270 @@ components:
         - INCREASE_SPEED
         - DECREASE_SPEED
         - EMERGENCY_BRAKE
+        - SET_IGNITION
+        - SET_HEADLIGHTS
+        - SET_HIGH_BEAMS
+        - SET_HAZARD_LIGHTS
+        - SET_TURN_SIGNAL
+        - SET_WIPERS
+        - SET_CLIMATE_POWER
+        - SET_CLIMATE_TEMPERATURE
+        - SET_CLIMATE_FAN_SPEED
+        - SET_CLIMATE_MODE
+
+    FleetCommandRequest:
+      type: object
+      required:
+        - command
+      properties:
+        command:
+          $ref: '#/components/schemas/ExecutableVehicleCommandType'
+        routeId:
+          type: integer
+          format: int64
+          nullable: true
+          description: Obligatorio para START.
+        value:
+          type: number
+          format: double
+          nullable: true
+          description: Velocidad objetivo/paso en km/h o valor del control simulado.
+
+    FleetCommandResult:
+      type: object
+      required:
+        - command
+        - requested
+        - accepted
+        - commands
+        - rejected
+        - createdAt
+      properties:
+        command:
+          $ref: '#/components/schemas/ExecutableVehicleCommandType'
+        requested:
+          type: integer
+        accepted:
+          type: integer
+        commands:
+          type: array
+          items:
+            $ref: '#/components/schemas/VehicleCommand'
+        rejected:
+          type: object
+          additionalProperties:
+            type: string
+          description: Motivo de rechazo por ID de vehículo.
+        createdAt:
+          type: string
+          format: date-time
+
+    AaosTelemetryRequest:
+      type: object
+      required:
+        - source
+        - capturedAt
+        - values
+      properties:
+        source:
+          type: string
+          maxLength: 100
+        capturedAt:
+          type: string
+          format: date-time
+        values:
+          type: object
+          minProperties: 1
+          maxProperties: 200
+          additionalProperties: true
+        availableProperties:
+          type: array
+          maxItems: 200
+          items:
+            type: string
+            maxLength: 200
+        readErrors:
+          type: array
+          maxItems: 50
+          items:
+            type: string
+            maxLength: 500
+
+    AaosTelemetry:
+      allOf:
+        - $ref: '#/components/schemas/AaosTelemetryRequest'
+        - type: object
+          required:
+            - id
+            - vehicleId
+            - receivedAt
+          properties:
+            id:
+              type: integer
+              format: int64
+            vehicleId:
+              type: integer
+              format: int64
+            receivedAt:
+              type: string
+              format: date-time
+
+    AaosNotificationRequest:
+      type: object
+      required:
+        - title
+        - message
+        - severity
+      properties:
+        title:
+          type: string
+          minLength: 1
+          maxLength: 100
+        message:
+          type: string
+          minLength: 1
+          maxLength: 1000
+        severity:
+          $ref: '#/components/schemas/AlertSeverity'
+
+    AaosNotification:
+      allOf:
+        - $ref: '#/components/schemas/AaosNotificationRequest'
+        - type: object
+          required:
+            - vehicleId
+            - createdAt
+          properties:
+            vehicleId:
+              type: integer
+              format: int64
+            createdAt:
+              type: string
+              format: date-time
+
+    VehicleControlState:
+      type: object
+      required:
+        - vehicleId
+        - ignitionOn
+        - headlightsOn
+        - highBeamsOn
+        - hazardLightsOn
+        - turnSignal
+        - wipersOn
+        - climateOn
+        - climateTemperatureC
+        - climateFanSpeed
+        - climateMode
+      properties:
+        vehicleId:
+          type: integer
+          format: int64
+        ignitionOn:
+          type: boolean
+        headlightsOn:
+          type: boolean
+        highBeamsOn:
+          type: boolean
+        hazardLightsOn:
+          type: boolean
+        turnSignal:
+          type: string
+          enum: ['OFF', 'LEFT', 'RIGHT']
+        wipersOn:
+          type: boolean
+        climateOn:
+          type: boolean
+        climateTemperatureC:
+          type: number
+          format: double
+          minimum: 16
+          maximum: 30
+        climateFanSpeed:
+          type: integer
+          minimum: 0
+          maximum: 7
+        climateMode:
+          type: string
+          enum: [AUTO, COOL, HEAT]
+
+    VehicleDeviceEnrollment:
+      type: object
+      required: [vehicleId, pairingCode, pairingUrl, qrSvg, expiresAt]
+      properties:
+        vehicleId:
+          type: integer
+          format: int64
+        pairingCode:
+          type: string
+          description: Secreto de un solo uso. Trátelo como credencial y no lo registre en logs.
+        pairingUrl:
+          type: string
+          format: uri
+          description: URL para abrir o convertir en QR en la pantalla a vincular.
+        qrSvg:
+          type: string
+          description: SVG del QR; escanéelo con la cámara del teléfono para abrir la URL de vinculación.
+        expiresAt:
+          type: string
+          format: date-time
+
+    VehicleDeviceClaimRequest:
+      type: object
+      required: [pairingCode, deviceName]
+      properties:
+        pairingCode:
+          type: string
+          maxLength: 100
+        deviceName:
+          type: string
+          maxLength: 100
+
+    VehicleDeviceClaim:
+      type: object
+      required: [deviceId, vehicleId, deviceToken]
+      properties:
+        deviceId:
+          type: string
+          format: uuid
+        vehicleId:
+          type: integer
+          format: int64
+        deviceToken:
+          type: string
+          description: Secreto de solo lectura; almacenar de forma segura en el dispositivo.
+
+    VehicleDisplayState:
+      type: object
+      required: [vehicle, controls]
+      properties:
+        vehicle:
+          $ref: '#/components/schemas/VehicleStatusDto'
+        controls:
+          $ref: '#/components/schemas/VehicleControlState'
 
     ExecutableVehicleCommandType:
       type: string
-      description: Comandos actualmente soportados por el backend
+      description: Comandos soportados para la simulación, nunca para actuadores físicos
       enum:
         - START
         - PAUSE
         - RESUME
         - STOP
+        - SET_SPEED
+        - INCREASE_SPEED
+        - DECREASE_SPEED
+        - EMERGENCY_BRAKE
+        - SET_IGNITION
+        - SET_HEADLIGHTS
+        - SET_HIGH_BEAMS
+        - SET_HAZARD_LIGHTS
+        - SET_TURN_SIGNAL
+        - SET_WIPERS
+        - SET_CLIMATE_POWER
+        - SET_CLIMATE_TEMPERATURE
+        - SET_CLIMATE_FAN_SPEED
+        - SET_CLIMATE_MODE
 
 
     # ------------------------------------------------------------
@@ -1712,6 +2343,7 @@ components:
         - ROUTE_DEVIATION
         - COMMUNICATION_ERROR
         - SIMULATION_ERROR
+        - LOW_ENERGY
 
 
     AlertSeverity:

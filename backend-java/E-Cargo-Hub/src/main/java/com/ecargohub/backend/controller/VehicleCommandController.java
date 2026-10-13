@@ -22,7 +22,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/v1/vehicles/{vehicleId}/commands")
-@Tag(name = "Comandos", description = "Envío de comandos a vehículos (START, PAUSE, RESUME, STOP)")
+@Tag(name = "Comandos", description = "Control de simulación, velocidad y accesorios virtuales del vehículo")
 public class VehicleCommandController {
 
     private final VehicleCommandService vehicleCommandService;
@@ -41,11 +41,11 @@ public class VehicleCommandController {
             se publica en Kafka y el consumer lo procesa para arrancar/pausar/reanudar/detener
             la simulación del vehículo.
 
-            **Comandos disponibles:**
-            - `START` → arranca la simulación (rechazado con 409 si ya está corriendo)
-            - `PAUSE` → pausa la simulación (rechazado con 409 si no está corriendo)
-            - `RESUME` → reanuda (rechazado con 409 si no está pausado)
-            - `STOP` → detiene la simulación (rechazado con 409 si no está corriendo)
+            **Comandos disponibles:** `START`, `PAUSE`, `RESUME`, `STOP`, controles de velocidad (`SET_SPEED`,
+            `INCREASE_SPEED`, `DECREASE_SPEED`, `EMERGENCY_BRAKE`) y controles simulados (`SET_IGNITION`,
+            `SET_HEADLIGHTS`, `SET_HIGH_BEAMS`, `SET_HAZARD_LIGHTS`, `SET_TURN_SIGNAL`, `SET_WIPERS`,
+            `SET_CLIMATE_POWER`, `SET_CLIMATE_TEMPERATURE`, `SET_CLIMATE_FAN_SPEED`, `SET_CLIMATE_MODE`).
+            Los comandos de accesorios solo actualizan el estado virtual; no controlan actuadores AAOS.
 
             **Coordenadas opcionales:** si se envían `originLat/Lon` y `destLat/Lon`,
             la simulación usa esas coordenadas. Si no, aplica el trayecto por defecto Cox → Murcia.

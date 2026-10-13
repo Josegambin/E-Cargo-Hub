@@ -1,6 +1,7 @@
 package com.ecargohub.backend.dto.vehicle;
 
 import com.ecargohub.backend.domain.VehicleType;
+import com.ecargohub.backend.domain.enums.VehicleEnergyTypeEnum;
 import jakarta.validation.constraints.*;
 import lombok.Builder;
 
@@ -11,5 +12,13 @@ public record UpdateVehicleRequest(
 
         @NotNull VehicleType type,
 
-        @NotNull @DecimalMin("0.0") Double maxSpeed) {
+        @NotNull @DecimalMin("0.0") Double maxSpeed,
+
+        VehicleEnergyTypeEnum energyType,
+
+        @DecimalMin(value = "1.0") Double energyCapacity,
+
+        @DecimalMin(value = "0.01") Double energyConsumptionPer100,
+
+        @DecimalMin(value = "0.0") Double remainingEnergy) {
 }

@@ -8,12 +8,22 @@
  * Do not edit the class manually.
  */
 import { VehicleType } from './vehicleType';
+import { VehicleEnergyType } from './vehicleEnergyType';
 
 
 export interface CreateVehicleRequest { 
     name: string;
     type: VehicleType;
     maxSpeed: number;
+    energyType: VehicleEnergyType;
+    /**
+     * Capacidad en kWh para batería o litros para combustible.
+     */
+    energyCapacity: number;
+    /**
+     * Consumo por cada 100 km (kWh o litros, según energyType).
+     */
+    energyConsumptionPer100: number;
 }
 export namespace CreateVehicleRequest {
 }

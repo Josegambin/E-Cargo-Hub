@@ -3,6 +3,11 @@ import { LayoutComponent } from './shared/components/layout/layout.component';
 
 export const routes: Routes = [
     {
+        path: 'vehicle-display',
+        loadComponent: () => import('./features/vehicle-display/vehicle-display.component')
+            .then(m => m.VehicleDisplayComponent)
+    },
+    {
         path: '',
         component: LayoutComponent,
         children: [

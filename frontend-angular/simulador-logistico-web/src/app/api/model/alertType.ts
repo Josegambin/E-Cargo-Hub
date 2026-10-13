@@ -16,6 +16,7 @@ export const AlertType = {
     RouteDeviation: 'ROUTE_DEVIATION',
     CommunicationError: 'COMMUNICATION_ERROR',
     SimulationError: 'SIMULATION_ERROR',
+    LowEnergy: 'LOW_ENERGY',
 } as const;
 export type AlertType = typeof AlertType[keyof typeof AlertType];
 

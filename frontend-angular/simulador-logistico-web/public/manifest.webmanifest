@@ -1,0 +1,18 @@
+{
+  "name": "E-Cargo Hub Vehicle Display",
+  "short_name": "E-Cargo",
+  "description": "Pantalla de solo lectura para el estado virtual del vehículo",
+  "start_url": "/vehicle-display",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#020617",
+  "theme_color": "#020617",
+  "icons": [
+    {
+      "src": "/icons/ecargo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

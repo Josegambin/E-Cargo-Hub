@@ -10,13 +10,27 @@
 
 
 /**
- * Comandos actualmente soportados por el backend
+ * Comandos soportados para la simulación, nunca para actuadores físicos
  */
 export const ExecutableVehicleCommandType = {
     Start: 'START',
     Pause: 'PAUSE',
     Resume: 'RESUME',
     Stop: 'STOP',
+    SetSpeed: 'SET_SPEED',
+    IncreaseSpeed: 'INCREASE_SPEED',
+    DecreaseSpeed: 'DECREASE_SPEED',
+    EmergencyBrake: 'EMERGENCY_BRAKE',
+    SetIgnition: 'SET_IGNITION',
+    SetHeadlights: 'SET_HEADLIGHTS',
+    SetHighBeams: 'SET_HIGH_BEAMS',
+    SetHazardLights: 'SET_HAZARD_LIGHTS',
+    SetTurnSignal: 'SET_TURN_SIGNAL',
+    SetWipers: 'SET_WIPERS',
+    SetClimatePower: 'SET_CLIMATE_POWER',
+    SetClimateTemperature: 'SET_CLIMATE_TEMPERATURE',
+    SetClimateFanSpeed: 'SET_CLIMATE_FAN_SPEED',
+    SetClimateMode: 'SET_CLIMATE_MODE',
 } as const;
 export type ExecutableVehicleCommandType = typeof ExecutableVehicleCommandType[keyof typeof ExecutableVehicleCommandType];
 

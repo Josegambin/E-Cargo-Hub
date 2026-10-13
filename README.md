@@ -172,6 +172,7 @@ Toda la documentación del proyecto está organizada en la carpeta `docs/`:
 | `docs/DATA_MODEL.md` | Modelo de datos (ERD, tablas, índices) |
 | `docs/API.md` | Referencia completa de la API REST y WebSocket |
 | `docs/DEPLOYMENT.md` | Guía de despliegue |
+| `docs/AAOS_INTEGRATION.md` | Puente Android Automotive, sensores y control de simulaciones |
 | `docs/TROUBLESHOOTING.md` | Solución a problemas comunes |
 | `docs/DOSSIER.md` | Dossier técnico extenso del proyecto |
 | `CHANGELOG.md` | Historial de cambios por versión |
