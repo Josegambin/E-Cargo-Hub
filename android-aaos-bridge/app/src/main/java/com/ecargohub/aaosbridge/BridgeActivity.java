@@ -11,6 +11,8 @@ import android.os.Looper;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
+import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import org.json.JSONObject;
@@ -66,6 +68,21 @@ public class BridgeActivity extends Activity {
         content.addView(heading);
         content.addView(text("ESTADO DEL VEHICULO · SOLO LECTURA", 14, Color.rgb(148, 163, 184)));
 
+
+        EditText pairingCodeInput = new EditText(this);
+        pairingCodeInput.setHint("Código de pairing (64 caracteres hex)");
+        pairingCodeInput.setPadding(0, 16, 0, 8);
+        content.addView(pairingCodeInput);
+
+        TextView pairingCodeStatus = text("Vinculación: listo", 13, Color.rgb(148, 163, 184));
+        pairingCodeStatus.setPadding(0, 8, 0, 8);
+        content.addView(pairingCodeStatus);
+
+        Button pairingCodeButton = new Button(this);
+        pairingCodeButton.setText("Vincular con pairingCode");
+        pairingCodeButton.setPadding(0, 0, 0, 16);
+        pairingCodeButton.setOnClickListener(v -> handlePairingCodeBinding(pairingCodeInput, pairingCodeStatus));
+        content.addView(pairingCodeButton);
         deviceToken = VehicleCredentials.loadToken(this);
 
         LinearLayout dashboard = new LinearLayout(this);
@@ -248,6 +265,24 @@ public class BridgeActivity extends Activity {
         claimDevice(pairingCode.trim());
     }
 
+
+    private void handlePairingCodeBinding(EditText pairingCodeInput, TextView pairingCodeStatus) {
+        String pairingCode = pairingCodeInput.getText().toString().trim();
+        if (pairingCode == null || pairingCode.isBlank()) {
+            setPairingCodeStatus(pairingCodeStatus, "Ingresa un código de pairing.");
+            return;
+        }
+        if (!pairingCode.matches("[0-9a-f]{64}")) {
+            setPairingCodeStatus(pairingCodeStatus, "Formato no válido: debe ser 64 caracteres hexadecimales.");
+            return;
+        }
+        setPairingCodeStatus(pairingCodeStatus, "Vinculando con el backend...");
+        claimDevice(pairingCode);
+    }
+
+    private void setPairingCodeStatus(TextView status, String message) {
+        status.setText("Vinculación: " + message);
+    }
     private void claimDevice(String pairingCode) {
         if (!pairingCode.matches("[0-9a-f]{64}")) {
             connection.setText("Aprovisionamiento rechazado: formato de código no válido.");
