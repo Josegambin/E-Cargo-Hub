@@ -26,6 +26,9 @@ public class VhalBridgeService {
 
     private static final Logger log = LoggerFactory.getLogger(VhalBridgeService.class);
 
+    /** Nivel de combustible (mL) que el emulador AAOS representa como tanque lleno (100%). */
+    private static final double EMULATOR_FUEL_FULL_ML = 15000.0;
+
     private final boolean enabled;
     private final String adbPath;
     private final String serial;
@@ -33,20 +36,21 @@ public class VhalBridgeService {
     private final ExecutorService vhalExecutor;
     private volatile String lastError;
     private volatile String lastOutput;
+    private volatile boolean unsupportedBuildDetected;
 
     public VhalBridgeService(@Value("${app.vhal.enabled:false}") boolean enabled,
-            @Value("${app.vhal.adb-path:adb}") String adbPath, @Value("${app.vhal.serial:emulator-5556}") String serial,
+            @Value("${app.vhal.adb-path:adb}") String adbPath, @Value("${app.vhal.serial:emulator-5554") String serial,
             @Value("${app.vhal.timeout-seconds:5}") long timeoutSeconds) {
         this.enabled = enabled;
         this.adbPath = resolveAdbPath(adbPath);
-        this.serial = serial;
+        this.serial = sanitizeSerial(serial);
         this.timeoutSeconds = timeoutSeconds;
         this.vhalExecutor = Executors.newSingleThreadExecutor(r -> {
             Thread t = new Thread(r, "vhal-bridge");
             t.setDaemon(true);
             return t;
         });
-        log.info("VHAL bridge config: enabled={} adb='{}' serial={} timeout={}s", enabled, this.adbPath, serial,
+        log.info("VHAL bridge config: enabled={} adb='{}' serial={} timeout={}s", enabled, this.adbPath, this.serial,
                 timeoutSeconds);
     }
 
@@ -86,32 +90,35 @@ public class VhalBridgeService {
         }
         vhalExecutor.execute(() -> {
             double speedMs = Math.max(0.0, speedKmh / 3.6);
-            // El cluster del emulador muestra mph si el locale es US; inyectamos m/s
-            // (unidad VHAL) y el cambio a km/h se hace en Ajustes del emulador.
             inject("PERF_VEHICLE_SPEED", 0, speedMs);
-            inject("PERF_VEHICLE_SPEED_DISPLAY", 0, speedMs);
+            inject("PERF_VEHICLE_SPEED_DISPLAY", 0, speedKmh);
             inject("ENGINE_RPM", 0, estimatedRpm(speedKmh, gearPosition));
-            injectGear("GEAR_SELECTION", 0, gearSelection(gearPosition));
-            injectGear("CURRENT_GEAR", 0, currentGear(gearPosition));
-            // FUEL_LEVEL / EV_BATTERY_LEVEL van en mililitros y mAh en el VHAL,
-            // no en porcentaje. El cluster los convierte a % solo.
+            // Autonomía: misma fórmula que la app (VehicleDeviceService):
+            // capacidad * porcentaje / consumo-por-100, convertida a metros para el VHAL.
+            double rangeKm = energyCapacity > 0 && energyConsumptionPer100 > 0
+                    ? energyCapacity * energyPercent / energyConsumptionPer100 : 0.0;
+            inject("RANGE_REMAINING", 0, rangeKm * 1000.0);
+            inject("GEAR_SELECTION", 0, gearSelection(gearPosition));
+            inject("CURRENT_GEAR", 0, currentGear(gearPosition));
+            // Freno de estacionamiento: activo en P y N, inactivo en D y R
+            double parkingBrake = ("P".equals(gearPosition) || "N".equals(gearPosition)) ? 1.0 : 0.0;
+            inject("PARKING_BRAKE", 0, parkingBrake);
             double energyUnits = energyCapacity * energyPercent / 100.0 * 1000.0;
             if (energyType == VehicleEnergyTypeEnum.FUEL) {
                 inject("FUEL_LEVEL", 0, energyUnits);
             } else {
                 inject("EV_BATTERY_LEVEL", 0, energyUnits);
-            }
-            // RANGE_REMAINING va en metros: misma fórmula que la app
-            // (capacidad * % / consumo-por-100), convertida a metros.
-            if (energyCapacity > 0 && energyConsumptionPer100 > 0) {
-                inject("RANGE_REMAINING", 0,
-                        energyCapacity * energyPercent / energyConsumptionPer100 * 1000.0);
+                inject("EV_CURRENT_BATTERY_CAPACITY", 0, energyCapacity * 1000.0);
+                // El clúster por defecto del emulador dibuja la aguja "Fuel" a partir de
+                // FUEL_LEVEL (no de EV_BATTERY_LEVEL). Referencia 100% = 15000 mL del
+                // emulador; escalamos al % de batería para que refleje la carga real.
+                inject("FUEL_LEVEL", 0, EMULATOR_FUEL_FULL_ML * energyPercent / 100.0);
             }
         });
     }
 
-    /** Deja el emulador parado (velocidad 0, marcha P). */
-    public void pushStopped() {
+    /** Deja el emulador parado (velocidad 0, marcha P, freno de estacionamiento activo). */
+    public void pushStopped(double energyPercent, double energyCapacity, double energyConsumptionPer100) {
         if (!enabled) {
             return;
         }
@@ -119,8 +126,14 @@ public class VhalBridgeService {
             inject("PERF_VEHICLE_SPEED", 0, 0.0);
             inject("PERF_VEHICLE_SPEED_DISPLAY", 0, 0.0);
             inject("ENGINE_RPM", 0, 0.0);
-            injectGear("GEAR_SELECTION", 0, 1);
-            injectGear("CURRENT_GEAR", 0, 1);
+            inject("GEAR_SELECTION", 0, 4.0);
+            inject("CURRENT_GEAR", 0, 0.0);
+            // Freno de estacionamiento activo cuando está en P
+            inject("PARKING_BRAKE", 0, 1.0);
+            // Autonomía restante al detenerse
+            double rangeKm = energyCapacity > 0 && energyConsumptionPer100 > 0
+                    ? energyCapacity * energyPercent / energyConsumptionPer100 : 0.0;
+            inject("RANGE_REMAINING", 0, rangeKm * 1000.0);
         });
     }
 
@@ -134,18 +147,28 @@ public class VhalBridgeService {
         if (property == null || !property.matches("[A-Z0-9_]{1,64}")) {
             return new VhalResult(false, "Invalid property name: " + property);
         }
+        if (unsupportedBuildDetected) {
+            return new VhalResult(false,
+                    "Puente VHAL inactivo: el emulador es build 'user' y no acepta inyección VHAL");
+        }
         VhalResult viaCarService = runAdb(false, "shell", "cmd", "car_service", "inject-vhal-event", property,
-                String.valueOf(areaId), formatValue(value));
+                String.valueOf(areaId), formatTyped(property, value));
         if (viaCarService.ok()) {
             return viaCarService;
         }
         if (viaCarService.output() != null && viaCarService.output().contains("requires non-user build")) {
             VhalResult viaDumpsys = runAdb("shell", "dumpsys", "android.hardware.automotive.vehicle.IVehicle/default",
                     "--set", property, "-a", String.valueOf(areaId), typeFlag(property), formatTyped(property, value));
-            if (!viaDumpsys.ok()) {
-                log.warn("VHAL dumpsys --set tampoco funcionó para {}: {}", property, viaDumpsys.output());
-            } else {
+            if (viaDumpsys.ok()) {
                 log.debug("VHAL {} inyectado vía dumpsys --set (build user)", property);
+                return viaDumpsys;
+            }
+            if (!unsupportedBuildDetected) {
+                unsupportedBuildDetected = true;
+                log.warn("VHAL no soportado en este emulador (build 'user', p. ej. imagen Google Play): "
+                        + "car_service solo acepta inyectar en build no-user y dumpsys --set tampoco funciona aquí. "
+                        + "Usa el emulador AOSP (userdebug) o desactiva ECARGO_VHAL_ENABLED. "
+                        + "El puente queda inactivo para no repetir el intento en bucle.");
             }
             return viaDumpsys;
         }
@@ -213,6 +236,17 @@ public class VhalBridgeService {
         return formatValue(value);
     }
 
+    /**
+     * Normaliza el serial de ADB. Si la variable de entorno llegó sin resolver (placeholder {@code ${...}} crudo) o
+     * vacía, cae al serial por defecto {@code emulator-5554} para no pasar basura a {@code adb -s}.
+     */
+    private static String sanitizeSerial(String configured) {
+        if (configured == null || configured.isBlank() || configured.contains("${")) {
+            return "emulator-5554";
+        }
+        return configured.trim();
+    }
+
     private static String resolveAdbPath(String configured) {
         if (configured != null && !configured.isBlank() && !configured.equals("adb")) {
             return configured;
@@ -244,36 +278,26 @@ public class VhalBridgeService {
         return speedKmh * 1000.0 / 60.0 / 2.0 * ratios[gear - 1] * 3.5;
     }
 
-    private static int gearSelection(String gearPosition) {
-        // VehicleGear bitmask: P=1, R=2, N=4, D=8.
+    private static double gearSelection(String gearPosition) {
         if ("R".equals(gearPosition)) {
             return 2;
         }
         if ("N".equals(gearPosition)) {
-            return 4;
+            return 1;
         }
         if (gearPosition != null && gearPosition.startsWith("D")) {
             return 8;
         }
-        return 1;
+        return 4;
     }
 
-    private static int currentGear(String gearPosition) {
-        // VehicleGear bitmask: marcha N = 1 << (8 + N).
+    private static double currentGear(String gearPosition) {
         if (gearPosition != null && gearPosition.matches("^D[1-6]$")) {
-            return 1 << (8 + (gearPosition.charAt(1) - '0'));
+            return new double[] { 16, 32, 64, 128, 256, 512 }[gearPosition.charAt(1) - '1'];
         }
         if ("R".equals(gearPosition)) {
-            return 1 << 9;
+            return -1;
         }
-        return 1;
-    }
-
-    private VhalResult injectGear(String property, int areaId, int value) {
-        if (!enabled) {
-            return new VhalResult(false, "VHAL bridge disabled (ECARGO_VHAL_ENABLED!=true)");
-        }
-        return runAdb("shell", "cmd", "car_service", "inject-vhal-event", property, String.valueOf(areaId),
-                String.valueOf(value));
+        return 0;
     }
 }

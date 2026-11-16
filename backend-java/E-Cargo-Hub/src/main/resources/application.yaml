@@ -56,7 +56,7 @@ app:
   vhal:
     enabled: ${ECARGO_VHAL_ENABLED:false}
     adb-path: ${ECARGO_VHAL_ADB:adb}
-    serial: ${ECARGO_VHAL_SERIAL:emulator-5556}
+    serial: ${ECARGO_VHAL_SERIAL:emulator-5554}
     timeout-seconds: ${ECARGO_VHAL_TIMEOUT_SECONDS:5}
   mobile-app-url: ${ECARGO_MOBILE_APP_URL:http://localhost:4200/vehicle-display}
   cors:

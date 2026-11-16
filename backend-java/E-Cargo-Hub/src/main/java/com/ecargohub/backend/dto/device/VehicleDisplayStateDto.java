@@ -5,5 +5,5 @@ import com.ecargohub.backend.dto.vehicle.VehicleControlStateDto;
 import java.util.List;
 
 public record VehicleDisplayStateDto(VehicleStatusDto vehicle, VehicleControlStateDto controls,
-        List<double[]> routeCoordinates, Double estimatedRangeKm, Integer estimatedRpm) {
+        List<double[]> routeCoordinates, Double estimatedRangeKm, Integer estimatedRpm, Boolean parkingBrakeOn) {
 }

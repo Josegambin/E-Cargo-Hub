@@ -20,7 +20,7 @@ El estado mostrado es el de la simulación E-Cargo Hub, **no propiedades del VHA
    Write-Host "Token para Postman: $env:ECARGO_CONTROL_API_TOKEN"
 
    $env:ECARGO_VHAL_ENABLED = "true"
-   $env:ECARGO_VHAL_SERIAL = "emulator-5556"
+   $env:ECARGO_VHAL_SERIAL = "emulator-5554"
 
    .\mvnw.cmd spring-boot:run
    ```

@@ -126,8 +126,9 @@ public class VehicleDeviceService {
                 || consumptionPer100 <= 0 || energyPercent == null ? null
                         : energyCapacity * energyPercent / consumptionPer100;
         int estimatedRpm = estimateRpm(status.speedKmh(), status.gearPosition());
+        Boolean parkingBrakeOn = "P".equals(status.gearPosition()) || "N".equals(status.gearPosition());
         return new VehicleDisplayStateDto(status, simulationRegistry.getControls(vehicleId),
-                simulationRegistry.getRouteCoordinates(vehicleId), estimatedRangeKm, estimatedRpm);
+                simulationRegistry.getRouteCoordinates(vehicleId), estimatedRangeKm, estimatedRpm, parkingBrakeOn);
     }
 
     private int estimateRpm(Double speedKmh, String gearPosition) {

@@ -4,7 +4,7 @@ param(
     [ValidateRange(1, 2147483647)]
     [long]$VehicleId,
 
-    [string]$Serial = "emulator-5556",
+    [string]$Serial = "emulator-5554",
 
     [string]$BackendUrl = "http://localhost:8081",
 
@@ -239,11 +239,13 @@ while ($true) {
         $rpm = Get-EstimatedRpm -SpeedKmh $speedKmh -GearPosition $gearPosition
 
         Invoke-VhalInjection -Property "PERF_VEHICLE_SPEED" -AreaId 0 -Value ($speedKmh / 3.6)
-        Invoke-VhalInjection -Property "PERF_VEHICLE_SPEED_DISPLAY" -AreaId 0 -Value ($speedKmh / 3.6)
+        Invoke-VhalInjection -Property "PERF_VEHICLE_SPEED_DISPLAY" -AreaId 0 -Value $speedKmh
         Invoke-VhalInjection -Property "ENGINE_RPM" -AreaId 0 -Value $rpm
         Invoke-VhalInjection -Property "RANGE_REMAINING" -AreaId 0 -Value ($rangeKm * 1000.0)
         Invoke-VhalInjection -Property "GEAR_SELECTION" -AreaId 0 -Value (Get-GearSelection -GearPosition $gearPosition)
         Invoke-VhalInjection -Property "CURRENT_GEAR" -AreaId 0 -Value (Get-CurrentGear -GearPosition $gearPosition)
+        $parkingBrake = if ($gearPosition -eq "P" -or $gearPosition -eq "N") { 1.0 } else { 0.0 }
+        Invoke-VhalInjection -Property "PARKING_BRAKE" -AreaId 0 -Value $parkingBrake
 
         if ($vehicle.energyType -eq "FUEL") {
             Invoke-VhalInjection -Property "FUEL_LEVEL" -AreaId 0 `

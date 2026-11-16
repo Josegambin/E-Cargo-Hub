@@ -179,8 +179,31 @@ public class KafkaConsumerService {
         }
         h.pause();
         log.info("⏸️ Vehículo {} pausado", vehicleId);
-        emitStatus(vehicleId, "PAUSADO");
+        emitPaused(vehicleId);
         fleetEventService.vehiclePaused(vehicleId); // 🆕
+    }
+
+    private void emitPaused(Long vehicleId) {
+        double energyPercent = vehicleEnergyService.getEnergyPercent(vehicleId);
+        VehicleEnergyTypeEnum energyType = vehicleRepository.findById(vehicleId).map(vehicle -> vehicle.getEnergyType())
+                .orElse(VehicleEnergyTypeEnum.BATTERY_ELECTRIC);
+        Map<String, Object> paused = new HashMap<>();
+        paused.put("vehicleId", vehicleId);
+        paused.put("latitude", null);
+        paused.put("longitude", null);
+        paused.put("progress", null);
+        paused.put("speedKmh", 0.0);
+        paused.put("energyPercent", energyPercent);
+        paused.put("energyType", energyType.name());
+        paused.put("gearPosition", "N");
+        paused.put("status", "PAUSADO");
+        paused.put("timestamp", System.currentTimeMillis());
+        messagingTemplate.convertAndSend("/topic/vehicle-status/" + vehicleId, (Object) paused);
+        double energyCapacity = vehicleRepository.findById(vehicleId).map(v -> v.getEnergyCapacity()).orElse(0.0);
+        double energyConsumptionPer100 = vehicleRepository.findById(vehicleId)
+                .map(v -> v.getEnergyConsumptionPer100() == null ? 0.0 : v.getEnergyConsumptionPer100()).orElse(0.0);
+        vhalBridgeService.pushSimulationStep(0.0, energyPercent, energyCapacity, energyConsumptionPer100, energyType,
+                "N");
     }
 
     private void handleResume(Long vehicleId) {
@@ -317,6 +340,27 @@ public class KafkaConsumerService {
             double speed = approach(handle.getCurrentSpeedKmh(), requestedSpeed, ACCELERATION_KMH_PER_STEP);
             handle.setCurrentSpeedKmh(speed);
             if (speed == 0.0) {
+                Map<String, Object> stoppedTelemetry = new HashMap<>();
+                stoppedTelemetry.put("vehicleId", vehicleId);
+                stoppedTelemetry.put("latitude", coords.get(Math.max(0, i - 1))[0]);
+                stoppedTelemetry.put("longitude", coords.get(Math.max(0, i - 1))[1]);
+                stoppedTelemetry.put("progress", (int) Math.round(((double) i / total) * 100));
+                stoppedTelemetry.put("speedKmh", 0.0);
+                stoppedTelemetry.put("speedLimitKmh", 0.0);
+                stoppedTelemetry.put("energyPercent", energyPercent);
+                stoppedTelemetry.put("energyType", energyType.name());
+                stoppedTelemetry.put("gearPosition", "P");
+                stoppedTelemetry.put("status", "EN_RUTA");
+                stoppedTelemetry.put("timestamp", System.currentTimeMillis());
+                messagingTemplate.convertAndSend("/topic/vehicle-status/" + vehicleId, (Object) stoppedTelemetry);
+                double energyCapacity = vehicleRepository.findById(vehicleId)
+                        .map(vehicle -> vehicle.getEnergyCapacity()).orElse(0.0);
+                double energyConsumptionPer100 = vehicleRepository.findById(vehicleId)
+                        .map(vehicle -> vehicle.getEnergyConsumptionPer100() == null ? 0.0
+                                : vehicle.getEnergyConsumptionPer100())
+                        .orElse(0.0);
+                vhalBridgeService.pushSimulationStep(0.0, energyPercent, energyCapacity, energyConsumptionPer100,
+                        energyType, "P");
                 try {
                     Thread.sleep(200);
                 } catch (InterruptedException e) {
@@ -351,7 +395,12 @@ public class KafkaConsumerService {
 
             double energyCapacity = vehicleRepository.findById(vehicleId).map(vehicle -> vehicle.getEnergyCapacity())
                     .orElse(0.0);
-            vhalBridgeService.pushSimulationStep(speed, energyPercent, energyCapacity, energyType, gearPosition);
+            double energyConsumptionPer100 = vehicleRepository.findById(vehicleId)
+                    .map(vehicle -> vehicle.getEnergyConsumptionPer100() == null ? 0.0
+                            : vehicle.getEnergyConsumptionPer100())
+                    .orElse(0.0);
+            vhalBridgeService.pushSimulationStep(speed, energyPercent, energyCapacity, energyConsumptionPer100,
+                    energyType, gearPosition);
 
             try {
                 vehicleStatusService.updateStatus(vehicleId, coord[0], coord[1], progress, speed, "EN_RUTA",
@@ -413,7 +462,12 @@ public class KafkaConsumerService {
         finalStatus.put("timestamp", System.currentTimeMillis());
 
         messagingTemplate.convertAndSend("/topic/vehicle-status/" + vehicleId, (Object) finalStatus);
-        vhalBridgeService.pushStopped();
+        double energyCapacity = vehicleRepository.findById(vehicleId).map(vehicle -> vehicle.getEnergyCapacity())
+                .orElse(0.0);
+        double energyConsumptionPer100 = vehicleRepository.findById(vehicleId).map(
+                vehicle -> vehicle.getEnergyConsumptionPer100() == null ? 0.0 : vehicle.getEnergyConsumptionPer100())
+                .orElse(0.0);
+        vhalBridgeService.pushStopped(energyPercent, energyCapacity, energyConsumptionPer100);
 
         try {
             vehicleStatusService.updateStatus(vehicleId, finalLat, finalLon, 100, 0.0, "COMPLETADO", energyPercent,
@@ -434,6 +488,11 @@ public class KafkaConsumerService {
 
     private void emitStopMessage(Long vehicleId, double[] lastCoord) {
         double energyPercent = vehicleEnergyService.getEnergyPercent(vehicleId);
+        double energyCapacity = vehicleRepository.findById(vehicleId).map(vehicle -> vehicle.getEnergyCapacity())
+                .orElse(0.0);
+        double energyConsumptionPer100 = vehicleRepository.findById(vehicleId).map(
+                vehicle -> vehicle.getEnergyConsumptionPer100() == null ? 0.0 : vehicle.getEnergyConsumptionPer100())
+                .orElse(0.0);
         VehicleEnergyTypeEnum energyType = vehicleRepository.findById(vehicleId).map(vehicle -> vehicle.getEnergyType())
                 .orElse(VehicleEnergyTypeEnum.BATTERY_ELECTRIC);
         Map<String, Object> stopped = new HashMap<>();
@@ -448,7 +507,7 @@ public class KafkaConsumerService {
         stopped.put("status", "STOPPED");
         stopped.put("timestamp", System.currentTimeMillis());
         messagingTemplate.convertAndSend("/topic/vehicle-status/" + vehicleId, (Object) stopped);
-        vhalBridgeService.pushStopped();
+        vhalBridgeService.pushStopped(energyPercent, energyCapacity, energyConsumptionPer100);
 
         try {
             vehicleStatusService.updateStatus(vehicleId, lastCoord[0], lastCoord[1], 0, 0.0, "STOPPED", energyPercent,
