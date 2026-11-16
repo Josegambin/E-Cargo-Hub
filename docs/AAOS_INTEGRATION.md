@@ -19,17 +19,11 @@ El estado mostrado es el de la simulación E-Cargo Hub, **no propiedades del VHA
    $rng.Dispose()
    Write-Host "Token para Postman: $env:ECARGO_CONTROL_API_TOKEN"
 
+   $env:ECARGO_VHAL_ENABLED = "true"
+   $env:ECARGO_VHAL_SERIAL = "emulator-5556"
+
    .\mvnw.cmd spring-boot:run
    ```
-
-   $rng = [System.Security.Cryptography.RandomNumberGenerator]::Create()
-   $bytes = New-Object byte[] 6
-   $rng.GetBytes($bytes)
-   $env:ECARGO_CONTROL_API_TOKEN = [System.Convert]::ToBase64String($bytes)
-   $rng.Dispose()
-
-Write-Host "Token para Postman: $env:ECARGO_CONTROL_API_TOKEN"
-.\mvnw.cmd spring-boot:run
 
    Guarda el token de forma segura y configúralo también en el servicio backend que enviará órdenes. El token debe tener al menos 32 bytes UTF-8. Si no está configurado o es demasiado corto, las rutas de control responden `503`; con un token ausente o incorrecto responden `401`.
 
@@ -86,6 +80,52 @@ Invoke-RestMethod -Method Post `
   -ContentType "application/json" `
   -Body '{"command":"START","routeId":1}'
 ```
+
+## Puente VHAL (backend → emulador AAOS)
+
+El emulador AAOS **no expone ningún servidor gRPC en el puerto 45001**. La vía principal
+es ADB con `cmd car_service inject-vhal-event`; en imágenes **user con Google Play**
+ese comando está bloqueado (`requires non-user build`) y `VhalBridgeService`
+reintenta automáticamente con `dumpsys android.hardware.automotive.vehicle.IVehicle/default --set`.
+
+El puente está **desactivado por defecto**. Activación:
+
+```powershell
+$env:ECARGO_VHAL_ENABLED = "true"
+$env:ECARGO_VHAL_SERIAL = "emulator-5554"   # opcional, por defecto emulator-5554
+$env:ECARGO_VHAL_ADB = "adb"                # opcional, ruta al adb.exe
+.\mvnw.cmd spring-boot:run
+```
+
+Comportamiento:
+
+- En cada paso de simulación (`KafkaConsumerService.simulateVehicleMovement`) el backend
+  inyecta `PERF_VEHICLE_SPEED`, `PERF_VEHICLE_SPEED_DISPLAY`, `ENGINE_RPM`,
+  `GEAR_SELECTION`, `CURRENT_GEAR`, `RANGE_REMAINING` y, según `energyType`,
+  `FUEL_LEVEL` o `EV_BATTERY_LEVEL`.
+- Unidades VHAL: velocidad en **m/s**, energía en **mL / mAh** (no %), autonomía en
+  **metros**. El cluster convierte solo.
+- `GEAR_SELECTION` usa bitmask VehicleGear (1=P, 2=R, 4=N, 8=D) y `CURRENT_GEAR`
+  la marcha como bit (D6 = 8192);
+  van como enteros, sin decimales, porque el VHAL los rechaza como float.
+- Al finalizar o detenerse (`COMPLETADO` / `STOPPED`), inyecta velocidad 0 y marcha P.
+- Si el emulador está apagado o ADB falla, solo se registra un aviso en el log; la
+  simulación sigue funcionando con normalidad.
+
+Escritura manual (requiere `X-Control-Token` y puente activado):
+
+```http
+POST http://localhost:8081/api/v1/vehicles/1/commands/vhal-write
+Content-Type: application/json
+X-Control-Token: <ECARGO_CONTROL_API_TOKEN>
+
+{"property":"PERF_VEHICLE_SPEED","areaId":0,"value":13.9}
+```
+
+Si el puente está desactivado responde `503` con `{"vhalEnabled": false}`.
+Notas de unidades: `PERF_VEHICLE_SPEED` va en **m/s**, `FUEL_LEVEL` y niveles de
+batería en **mililitros / miliamperios-hora** según el VHAL, `RANGE_REMAINING` en
+**metros**. El endpoint acepta el valor ya en unidades VHAL.
 
 ## Control de simulaciones
 

@@ -780,6 +780,58 @@ paths:
                   $ref: '#/components/schemas/VehicleCommand'
 
 
+  /api/v1/vehicles/{vehicleId}/commands/vhal-write:
+
+    post:
+      security:
+        - ControlToken: []
+      tags:
+        - Commands
+
+      summary: Inyectar un valor manual en el VHAL
+
+      operationId: writeVhalValue
+
+      description: |
+        Escribe una propiedad en el VHAL del emulador AAOS mediante ADB
+        (`cmd car_service inject-vhal-event`). Requiere ECARGO_VHAL_ENABLED=true
+        y el emulador encendido. Los valores van en unidades VHAL
+        (PERF_VEHICLE_SPEED en m/s, RANGE_REMAINING en metros).
+
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+
+      requestBody:
+        required: true
+
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VhalWriteRequest'
+
+      responses:
+
+        '401':
+          description: Falta el token de control o no es válido
+
+        '503':
+          description: El puente VHAL está desactivado
+
+        '200':
+          description: Valor inyectado
+
+          content:
+            application/json:
+              schema:
+                type: object
+
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+
   # ============================================================
   # POSITIONS
   # ============================================================
@@ -1891,7 +1943,6 @@ components:
 
       required:
         - command
-
       properties:
 
         command:
@@ -1942,6 +1993,33 @@ components:
           nullable: true
           minimum: -180
           maximum: 180
+
+
+    VhalWriteRequest:
+      type: object
+
+      required:
+        - property
+        - value
+
+      properties:
+
+        property:
+          type: string
+          description: Nombre de propiedad VHAL, por ejemplo PERF_VEHICLE_SPEED o FUEL_LEVEL.
+          example: PERF_VEHICLE_SPEED
+
+        areaId:
+          type: integer
+          format: int32
+          default: 0
+          description: Identificador de área (0 para propiedades globales).
+
+        value:
+          type: number
+          format: double
+          description: Valor a inyectar en unidades VHAL.
+          example: 13.9
 
 
     VehicleCommand:

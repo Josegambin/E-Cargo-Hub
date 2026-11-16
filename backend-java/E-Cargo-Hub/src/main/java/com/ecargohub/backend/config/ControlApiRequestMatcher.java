@@ -11,6 +11,7 @@ public final class ControlApiRequestMatcher implements RequestMatcher {
     public static final ControlApiRequestMatcher INSTANCE = new ControlApiRequestMatcher();
 
     private static final List<Pattern> CONTROL_PATHS = List.of(Pattern.compile("^/api/v1/vehicles/[^/]+/commands$"),
+            Pattern.compile("^/api/v1/vehicles/[^/]+/commands/vhal-write$"),
             Pattern.compile("^/api/v1/vehicles/[^/]+/aaos/simulated-commands$"),
             Pattern.compile("^/api/v1/vehicles/[^/]+/device-enrollments$"), Pattern.compile("^/api/v1/fleet/commands$"),
             Pattern.compile("^/api/v1/simulations/[^/]+/(start|pause|resume|stop)$"));

@@ -2,9 +2,12 @@ package com.ecargohub.backend.controller;
 
 import com.ecargohub.backend.dto.command.VehicleCommandDto;
 import com.ecargohub.backend.dto.command.VehicleCommandRequest;
+import com.ecargohub.backend.dto.vhal.VhalWriteRequest;
 import com.ecargohub.backend.interfaces.VehicleCommandService;
 import com.ecargohub.backend.mapper.VehicleCommandMapper;
 import com.ecargohub.backend.repository.VehicleCommandRepository;
+import com.ecargohub.backend.repository.VehicleRepository;
+import com.ecargohub.backend.service.VhalBridgeService;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,12 +31,17 @@ public class VehicleCommandController {
     private final VehicleCommandService vehicleCommandService;
     private final VehicleCommandRepository commandRepository;
     private final VehicleCommandMapper commandMapper;
+    private final VehicleRepository vehicleRepository;
+    private final VhalBridgeService vhalBridgeService;
 
     public VehicleCommandController(VehicleCommandService vehicleCommandService,
-            VehicleCommandRepository commandRepository, VehicleCommandMapper commandMapper) {
+            VehicleCommandRepository commandRepository, VehicleCommandMapper commandMapper,
+            VehicleRepository vehicleRepository, VhalBridgeService vhalBridgeService) {
         this.vehicleCommandService = vehicleCommandService;
         this.commandRepository = commandRepository;
         this.commandMapper = commandMapper;
+        this.vehicleRepository = vehicleRepository;
+        this.vhalBridgeService = vhalBridgeService;
     }
 
     @Operation(summary = "Enviar un comando a un vehículo", description = """
@@ -69,5 +77,56 @@ public class VehicleCommandController {
         List<VehicleCommandDto> history = commandRepository.findByVehicleIdOrderByCreatedAtDesc(vehicleId).stream()
                 .map(commandMapper::toDto).toList();
         return ResponseEntity.ok(history);
+    }
+
+    @Operation(summary = "Inyectar un valor manual en el VHAL", description = """
+            Escribe una propiedad en el VHAL del emulador AAOS mediante ADB
+            (`cmd car_service inject-vhal-event`). Requiere `ECARGO_VHAL_ENABLED=true`
+            y el emulador encendido. Útil para pruebas manuales de speed, fuel, etc.
+            """)
+    @ApiResponses({ @ApiResponse(responseCode = "200", description = "Valor inyectado"),
+            @ApiResponse(responseCode = "404", description = "Vehículo no encontrado", content = @Content(schema = @Schema(hidden = true))),
+            @ApiResponse(responseCode = "503", description = "Puente VHAL desactivado", content = @Content(schema = @Schema(hidden = true))) })
+    @PostMapping("/vhal-write")
+    public ResponseEntity<java.util.Map<String, Object>> writeVhal(
+            @Parameter(description = "ID del vehículo", example = "1") @PathVariable Long vehicleId,
+            @Valid @RequestBody VhalWriteRequest request) {
+        vehicleRepository.findById(vehicleId).orElseThrow(
+                () -> new com.ecargohub.backend.exception.ResourceNotFoundException("Vehicle not found: " + vehicleId));
+        if (!vhalBridgeService.isEnabled()) {
+            return ResponseEntity.status(org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE)
+                    .body(java.util.Map.of("vehicleId", vehicleId, "vhalEnabled", false));
+        }
+        String property = request.property().trim().toUpperCase(java.util.Locale.ROOT);
+        com.ecargohub.backend.service.VhalBridgeService.VhalResult result = vhalBridgeService.inject(property,
+                request.areaId(), request.value());
+        if (!result.ok()) {
+            java.util.Map<String, Object> error = new java.util.HashMap<>();
+            error.put("vehicleId", vehicleId);
+            error.put("property", property);
+            error.put("areaId", request.areaId());
+            error.put("value", request.value());
+            error.put("adb", vhalBridgeService.getAdbPath());
+            error.put("serial", vhalBridgeService.getSerial());
+            error.put("error", result.output() == null ? "" : result.output());
+            return ResponseEntity.status(org.springframework.http.HttpStatus.BAD_GATEWAY).body(error);
+        }
+        return ResponseEntity.ok(java.util.Map.of("vehicleId", vehicleId, "property", property, "areaId",
+                request.areaId(), "value", request.value()));
+    }
+
+    @Operation(summary = "Estado del puente VHAL", description = "Muestra si el puente está activo, qué adb/serial usa y el último error de inyección.")
+    @ApiResponse(responseCode = "200", description = "Estado del puente")
+    @GetMapping("/vhal-status")
+    public ResponseEntity<java.util.Map<String, Object>> vhalStatus(
+            @Parameter(description = "ID del vehículo", example = "1") @PathVariable Long vehicleId) {
+        java.util.Map<String, Object> body = new java.util.HashMap<>();
+        body.put("vehicleId", vehicleId);
+        body.put("vhalEnabled", vhalBridgeService.isEnabled());
+        body.put("adb", vhalBridgeService.getAdbPath());
+        body.put("serial", vhalBridgeService.getSerial());
+        body.put("lastError", vhalBridgeService.getLastError());
+        body.put("lastOutput", vhalBridgeService.getLastOutput());
+        return ResponseEntity.ok(body);
     }
 }

@@ -124,7 +124,8 @@ function Sync-HvacValue {
     if ($null -eq $state) {
         $state = @{ value = $normalizedValue; lastAttempt = [datetime]::MinValue; applied = $false }
         $climateSync[$Property] = $state
-    } elseif ([math]::Abs($state.value - $normalizedValue) -gt 0.05) {
+    }
+    elseif ([math]::Abs($state.value - $normalizedValue) -gt 0.05) {
         $state.value = $normalizedValue
         $state.applied = $false
     }
@@ -138,7 +139,8 @@ function Sync-HvacValue {
         Send-ClimateCommand -Command $Command -Value $normalizedValue
         $state.applied = $true
         Write-Host "AAOS $Property=$normalizedValue sent to vehicle $VehicleId."
-    } catch {
+    }
+    catch {
         Write-Warning "Could not sync $Property to vehicle ${VehicleId}: $($_.Exception.Message)"
     }
 }
@@ -222,7 +224,8 @@ while ($true) {
         $energyPercent = 100.0
         if ($null -ne $status.energyPercent) {
             $energyPercent = [double]$status.energyPercent
-        } elseif ($null -ne $vehicle.energyPercent) {
+        }
+        elseif ($null -ne $vehicle.energyPercent) {
             $energyPercent = [double]$vehicle.energyPercent
         }
         $energyCapacity = 0.0
@@ -245,7 +248,8 @@ while ($true) {
         if ($vehicle.energyType -eq "FUEL") {
             Invoke-VhalInjection -Property "FUEL_LEVEL" -AreaId 0 `
                 -Value ($energyCapacity * $energyPercent / 100.0 * 1000.0)
-        } else {
+        }
+        else {
             Invoke-VhalInjection -Property "EV_BATTERY_LEVEL" -AreaId 0 `
                 -Value ($energyCapacity * $energyPercent / 100.0 * 1000.0)
             Invoke-VhalInjection -Property "EV_CURRENT_BATTERY_CAPACITY" -AreaId 0 `
@@ -253,10 +257,10 @@ while ($true) {
         }
 
         foreach ($binding in @(
-            @{ property = "HVAC_POWER_ON"; command = "SET_CLIMATE_POWER"; area = 1 },
-            @{ property = "HVAC_FAN_SPEED"; command = "SET_CLIMATE_FAN_SPEED"; area = 1 },
-            @{ property = "HVAC_TEMPERATURE_SET"; command = "SET_CLIMATE_TEMPERATURE"; area = 1 }
-        )) {
+                @{ property = "HVAC_POWER_ON"; command = "SET_CLIMATE_POWER"; area = 1 },
+                @{ property = "HVAC_FAN_SPEED"; command = "SET_CLIMATE_FAN_SPEED"; area = 1 },
+                @{ property = "HVAC_TEMPERATURE_SET"; command = "SET_CLIMATE_TEMPERATURE"; area = 1 }
+            )) {
             try {
                 $value = Get-VhalNumber -Property $binding.property -AreaId $binding.area
                 if ($reportedVhalErrors.ContainsKey($binding.property)) {
@@ -265,14 +269,16 @@ while ($true) {
                 }
                 Sync-HvacValue -Property $binding.property -AreaId $binding.area `
                     -Command $binding.command -Value $value
-            } catch {
+            }
+            catch {
                 if (-not $reportedVhalErrors.ContainsKey($binding.property)) {
                     Write-Warning "Could not read $($binding.property) from AAOS: $($_.Exception.Message)"
                     $reportedVhalErrors[$binding.property] = $true
                 }
             }
         }
-    } catch {
+    }
+    catch {
         Write-Warning "AAOS VHAL bridge iteration failed: $($_.Exception.Message)"
     }
 

@@ -13,6 +13,7 @@ import com.ecargohub.backend.service.FleetEventService;
 import com.ecargohub.backend.service.IdempotencyService;
 import com.ecargohub.backend.service.SimulationRegistry;
 import com.ecargohub.backend.service.SimulationRegistry.SimulationHandle;
+import com.ecargohub.backend.service.VhalBridgeService;
 import com.ecargohub.backend.service.VehicleStatusService;
 import com.ecargohub.backend.service.VehicleTelemetryService;
 import com.ecargohub.backend.service.VehicleEnergyService;
@@ -58,6 +59,7 @@ public class KafkaConsumerService {
     private final VehicleRepository vehicleRepository;
     private final VehicleEnergyService vehicleEnergyService;
     private final AlertService alertService;
+    private final VhalBridgeService vhalBridgeService;
 
     @PreDestroy
     void shutdownSimulationExecutor() {
@@ -68,7 +70,7 @@ public class KafkaConsumerService {
             IdempotencyService idempotencyService, SimulationRegistry simulationRegistry,
             VehicleStatusService vehicleStatusService, VehicleTelemetryService vehicleTelemetryService,
             FleetEventService fleetEventService, VehicleRepository vehicleRepository,
-            VehicleEnergyService vehicleEnergyService, AlertService alertService) {
+            VehicleEnergyService vehicleEnergyService, AlertService alertService, VhalBridgeService vhalBridgeService) {
         this.graphHopperService = graphHopperService;
         this.messagingTemplate = messagingTemplate;
         this.idempotencyService = idempotencyService;
@@ -85,6 +87,7 @@ public class KafkaConsumerService {
         this.vehicleRepository = vehicleRepository;
         this.vehicleEnergyService = vehicleEnergyService;
         this.alertService = alertService;
+        this.vhalBridgeService = vhalBridgeService;
     }
 
     @KafkaListener(topics = "vehicle-commands", groupId = "e-cargo-hub-consumers", containerFactory = "stringKafkaListenerContainerFactory")
@@ -346,6 +349,10 @@ public class KafkaConsumerService {
 
             messagingTemplate.convertAndSend("/topic/vehicle-status/" + vehicleId, (Object) telemetry);
 
+            double energyCapacity = vehicleRepository.findById(vehicleId).map(vehicle -> vehicle.getEnergyCapacity())
+                    .orElse(0.0);
+            vhalBridgeService.pushSimulationStep(speed, energyPercent, energyCapacity, energyType, gearPosition);
+
             try {
                 vehicleStatusService.updateStatus(vehicleId, coord[0], coord[1], progress, speed, "EN_RUTA",
                         energyPercent, energyType, gearPosition);
@@ -406,6 +413,7 @@ public class KafkaConsumerService {
         finalStatus.put("timestamp", System.currentTimeMillis());
 
         messagingTemplate.convertAndSend("/topic/vehicle-status/" + vehicleId, (Object) finalStatus);
+        vhalBridgeService.pushStopped();
 
         try {
             vehicleStatusService.updateStatus(vehicleId, finalLat, finalLon, 100, 0.0, "COMPLETADO", energyPercent,
@@ -440,6 +448,7 @@ public class KafkaConsumerService {
         stopped.put("status", "STOPPED");
         stopped.put("timestamp", System.currentTimeMillis());
         messagingTemplate.convertAndSend("/topic/vehicle-status/" + vehicleId, (Object) stopped);
+        vhalBridgeService.pushStopped();
 
         try {
             vehicleStatusService.updateStatus(vehicleId, lastCoord[0], lastCoord[1], 0, 0.0, "STOPPED", energyPercent,

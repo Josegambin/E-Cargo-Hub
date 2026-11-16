@@ -8,6 +8,7 @@ import android.graphics.drawable.GradientDrawable;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.ScrollView;
@@ -42,8 +43,11 @@ public class BridgeActivity extends Activity {
     private TextView energy;
     private TextView derivedTelemetry;
     private TextView controls;
+    private LinearLayout dashboard;
+    private LinearLayout pairingSection;
     private TextView connection;
     private boolean activityStarted;
+    private boolean connected;
 
     private final Runnable refreshLoop = new Runnable() {
         @Override
@@ -69,23 +73,27 @@ public class BridgeActivity extends Activity {
         content.addView(text("ESTADO DEL VEHICULO · SOLO LECTURA", 14, Color.rgb(148, 163, 184)));
 
 
+        pairingSection = new LinearLayout(this);
+        pairingSection.setOrientation(LinearLayout.VERTICAL);
+        content.addView(pairingSection);
+
         EditText pairingCodeInput = new EditText(this);
         pairingCodeInput.setHint("Código de pairing (64 caracteres hex)");
         pairingCodeInput.setPadding(0, 16, 0, 8);
-        content.addView(pairingCodeInput);
+        pairingSection.addView(pairingCodeInput);
 
         TextView pairingCodeStatus = text("Vinculación: listo", 13, Color.rgb(148, 163, 184));
         pairingCodeStatus.setPadding(0, 8, 0, 8);
-        content.addView(pairingCodeStatus);
+        pairingSection.addView(pairingCodeStatus);
 
         Button pairingCodeButton = new Button(this);
         pairingCodeButton.setText("Vincular con pairingCode");
         pairingCodeButton.setPadding(0, 0, 0, 16);
         pairingCodeButton.setOnClickListener(v -> handlePairingCodeBinding(pairingCodeInput, pairingCodeStatus));
-        content.addView(pairingCodeButton);
+        pairingSection.addView(pairingCodeButton);
         deviceToken = VehicleCredentials.loadToken(this);
 
-        LinearLayout dashboard = new LinearLayout(this);
+        dashboard = new LinearLayout(this);
         dashboard.setOrientation(LinearLayout.VERTICAL);
         dashboard.setPadding(24, 24, 24, 24);
         GradientDrawable background = new GradientDrawable();
@@ -126,6 +134,7 @@ public class BridgeActivity extends Activity {
                 13, Color.rgb(148, 163, 184)));
 
         setContentView(scrollView);
+        updateSections();
         handleAdminProvisionIntent(getIntent());
     }
 
@@ -150,6 +159,24 @@ public class BridgeActivity extends Activity {
         super.onStop();
     }
 
+    private void updateSections() {
+        boolean showData = connected;
+        pairingSection.setVisibility(showData ? View.GONE : View.VISIBLE);
+        dashboard.setVisibility(showData ? View.VISIBLE : View.GONE);
+        connection.setVisibility(showData ? View.GONE : View.VISIBLE);
+    }
+
+    private void markConnected() {
+        connected = true;
+        updateSections();
+    }
+
+    private void markDisconnected(String message) {
+        connected = false;
+        updateSections();
+        connection.setText(message);
+    }
+
     private void refreshDashboard() {
         if (!activityStarted || !refreshInFlight.compareAndSet(false, true)) {
             return;
@@ -157,7 +184,7 @@ public class BridgeActivity extends Activity {
 
         String token = deviceToken;
         if (token == null || token.isBlank()) {
-            connection.setText("Dispositivo pendiente de aprovisionamiento del administrador.");
+            markDisconnected("Dispositivo pendiente de aprovisionamiento del administrador.");
             refreshInFlight.set(false);
             return;
         }
@@ -201,17 +228,17 @@ public class BridgeActivity extends Activity {
                     derivedTelemetry.setText("Autonomía estimada: " + range + " · RPM virtual aprox.: "
                             + estimatedRpm);
                     controls.setText(summary);
-                    connection.setText("Conectado · Vehículo " + currentVehicleId + " · Solo lectura");
+                    markConnected();
                 });
             } catch (Exception error) {
                 boolean unauthorized = error instanceof HttpStatusException statusError && statusError.statusCode == 401;
                 if (unauthorized && token.equals(deviceToken)) {
                     deviceToken = null;
                     VehicleCredentials.clearToken(this);
-                    mainHandler.post(() -> connection
-                            .setText("Credencial rechazada. Se requiere un nuevo aprovisionamiento del administrador."));
+                    mainHandler.post(() -> markDisconnected(
+                            "Credencial rechazada. Se requiere un nuevo aprovisionamiento del administrador."));
                 } else if (!unauthorized) {
-                    mainHandler.post(() -> connection.setText("Backend no disponible: " + error.getMessage()));
+                    mainHandler.post(() -> markDisconnected("Backend no disponible: " + error.getMessage()));
                 }
             } finally {
                 refreshInFlight.set(false);
@@ -258,10 +285,10 @@ public class BridgeActivity extends Activity {
         }
         String pairingCode = intent.getStringExtra(EXTRA_PAIRING_CODE);
         if (pairingCode == null || pairingCode.isBlank()) {
-            connection.setText("Aprovisionamiento rechazado: falta el código del administrador.");
+            markDisconnected("Aprovisionamiento rechazado: falta el código del administrador.");
             return;
         }
-        connection.setText("Aprovisionamiento administrativo en curso…");
+        markDisconnected("Aprovisionamiento administrativo en curso…");
         claimDevice(pairingCode.trim());
     }
 
@@ -285,7 +312,7 @@ public class BridgeActivity extends Activity {
     }
     private void claimDevice(String pairingCode) {
         if (!pairingCode.matches("[0-9a-f]{64}")) {
-            connection.setText("Aprovisionamiento rechazado: formato de código no válido.");
+            mainHandler.post(() -> markDisconnected("Aprovisionamiento rechazado: formato de código no válido."));
             return;
         }
         new Thread(() -> {
@@ -295,18 +322,14 @@ public class BridgeActivity extends Activity {
                 claimRequest.put("deviceName", "AAOS " + android.os.Build.MODEL);
                 JSONObject claim = postJson(backendUrl + "/api/v1/device-enrollments/claim", claimRequest);
                 String newToken = claim.getString("deviceToken");
-                String newVehicleId = String.valueOf(claim.getLong("vehicleId"));
                 VehicleCredentials.saveToken(this, newToken);
                 deviceToken = newToken;
-                mainHandler.post(() -> {
-                    connection.setText("Pantalla vinculada · Vehículo " + newVehicleId);
-                    refreshDashboard();
-                });
+                mainHandler.post(() -> refreshDashboard());
             } catch (Exception error) {
                 String message = error instanceof HttpStatusException statusError && statusError.statusCode == 401
                         ? "Código rechazado o vencido. La credencial actual se conserva; el administrador debe generar otro código."
                         : "Aprovisionamiento no completado: " + error.getMessage();
-                mainHandler.post(() -> connection.setText(message));
+                mainHandler.post(() -> markDisconnected(message));
             }
         }, "ecargo-device-pairing").start();
     }
