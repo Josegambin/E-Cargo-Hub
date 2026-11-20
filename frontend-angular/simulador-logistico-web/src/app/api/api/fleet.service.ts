@@ -55,6 +55,9 @@ export class FleetService extends BaseService {
 
         let localVarHeaders = this.defaultHeaders;
 
+        // authentication (BearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('BearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
+
         // authentication (ControlToken) required
         localVarHeaders = this.configuration.addCredentialToHeaders('ControlToken', 'X-Control-Token', localVarHeaders);
 

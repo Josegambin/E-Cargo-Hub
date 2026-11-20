@@ -8,6 +8,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { WebSocketService } from '../../../core/services/websocket.facade';
 import { ThemeService } from '../../../core/services/theme.facade';
 import { LanguageService } from '../../../core/services/language.facade';
+import { AuthenticationService } from '../../../core/auth/authentication.service';
 
 @Component({
     selector: 'app-layout',
@@ -29,12 +30,22 @@ export class LayoutComponent {
     private ws = inject(WebSocketService);
     private themeSvc = inject(ThemeService);
     private langSvc = inject(LanguageService);
+    readonly auth = inject(AuthenticationService);
 
     readonly connected = this.ws.connected;
     readonly isDark = this.themeSvc.isDark;
+
+    constructor() {
+        this.ws.connect();
+        this.ws.subscribeToFleetEvents();
+    }
 
     t(key: string): string { return this.langSvc.t(key); }
 
     toggleTheme(): void { this.themeSvc.toggleTheme(); }
     setLanguage(lang: 'es' | 'en'): void { this.langSvc.setLanguage(lang); }
+    logout(): void {
+        this.ws.disconnect();
+        void this.auth.logout();
+    }
 }

@@ -22,6 +22,8 @@ import { ApiError } from '../model/apiError';
 import { VehicleCommand } from '../model/vehicleCommand';
 // @ts-ignore
 import { VehicleCommandRequest } from '../model/vehicleCommandRequest';
+// @ts-ignore
+import { VhalWriteRequest } from '../model/vhalWriteRequest';
 
 // @ts-ignore
 import { BASE_PATH, COLLECTION_FORMATS }                     from '../variables';
@@ -61,6 +63,9 @@ export class CommandsService extends BaseService {
         }
 
         let localVarHeaders = this.defaultHeaders;
+
+        // authentication (BearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('BearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
 
         // authentication (ControlToken) required
         localVarHeaders = this.configuration.addCredentialToHeaders('ControlToken', 'X-Control-Token', localVarHeaders);
@@ -131,6 +136,9 @@ export class CommandsService extends BaseService {
 
         let localVarHeaders = this.defaultHeaders;
 
+        // authentication (BearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('BearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
+
         const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
             'application/json'
         ]);
@@ -192,6 +200,9 @@ export class CommandsService extends BaseService {
 
         let localVarHeaders = this.defaultHeaders;
 
+        // authentication (BearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('BearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
+
         // authentication (ControlToken) required
         localVarHeaders = this.configuration.addCredentialToHeaders('ControlToken', 'X-Control-Token', localVarHeaders);
 
@@ -233,6 +244,83 @@ export class CommandsService extends BaseService {
             {
                 context: localVarHttpContext,
                 body: vehicleCommandRequest,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Inyectar un valor manual en el VHAL
+     * Escribe una propiedad en el VHAL del emulador AAOS mediante ADB (&#x60;cmd car_service inject-vhal-event&#x60;). Requiere ECARGO_VHAL_ENABLED&#x3D;true y el emulador encendido. Los valores van en unidades VHAL (PERF_VEHICLE_SPEED en m/s, RANGE_REMAINING en metros).
+     * @endpoint post /api/v1/vehicles/{vehicleId}/commands/vhal-write
+     * @param vehicleId Identificador del vehículo
+     * @param vhalWriteRequest
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public writeVhalValue(vehicleId: number, vhalWriteRequest: VhalWriteRequest, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<object>;
+    public writeVhalValue(vehicleId: number, vhalWriteRequest: VhalWriteRequest, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<object>>;
+    public writeVhalValue(vehicleId: number, vhalWriteRequest: VhalWriteRequest, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<object>>;
+    public writeVhalValue(vehicleId: number, vhalWriteRequest: VhalWriteRequest, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (vehicleId === null || vehicleId === undefined) {
+            throw new Error('Required parameter vehicleId was null or undefined when calling writeVhalValue.');
+        }
+        if (vhalWriteRequest === null || vhalWriteRequest === undefined) {
+            throw new Error('Required parameter vhalWriteRequest was null or undefined when calling writeVhalValue.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (BearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('BearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
+
+        // authentication (ControlToken) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('ControlToken', 'X-Control-Token', localVarHeaders);
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        // to determine the Content-Type header
+        const consumes: string[] = [
+            'application/json'
+        ];
+        const httpContentTypeSelected: string | undefined = this.configuration.selectHeaderContentType(consumes);
+        if (httpContentTypeSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Content-Type', httpContentTypeSelected);
+        }
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/vehicles/${this.configuration.encodeParam({name: "vehicleId", value: vehicleId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/commands/vhal-write`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<object>('post', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                body: vhalWriteRequest,
                 responseType: <any>responseType_,
                 ...(withCredentials ? { withCredentials } : {}),
                 headers: localVarHeaders,

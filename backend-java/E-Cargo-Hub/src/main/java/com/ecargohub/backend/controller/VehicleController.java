@@ -100,6 +100,7 @@ public class VehicleController {
     @GetMapping("/{id}/status")
     public ResponseEntity<VehicleStatusDto> getStatus(
             @Parameter(description = "ID del vehículo", example = "1") @PathVariable Long id) {
+        vehicleService.findById(id);
         return vehicleStatusService.getStatus(id).map(ResponseEntity::ok)
                 .orElse(ResponseEntity.ok(VehicleStatusDto.empty(id)));
     }

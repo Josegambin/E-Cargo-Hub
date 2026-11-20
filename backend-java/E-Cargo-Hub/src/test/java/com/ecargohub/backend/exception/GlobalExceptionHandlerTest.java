@@ -26,4 +26,18 @@ class GlobalExceptionHandlerTest {
         assertEquals("UNAUTHORIZED", response.getBody().get("error"));
         assertEquals("Pairing code is invalid or already used", response.getBody().get("message"));
     }
+
+    @Test
+    void reportsUnavailableExternalServicesAs503() {
+        GlobalExceptionHandler handler = new GlobalExceptionHandler();
+        HttpServletRequest request = mock(HttpServletRequest.class);
+        when(request.getRequestURI()).thenReturn("/api/v1/vehicles/1/commands");
+
+        var response = handler.handleExternalServiceUnavailable(
+                new ExternalServiceUnavailableException("GraphHopper routing service is unavailable"), request);
+
+        assertEquals(HttpStatus.SERVICE_UNAVAILABLE, response.getStatusCode());
+        assertEquals(503, response.getBody().get("status"));
+        assertEquals("SERVICE_UNAVAILABLE", response.getBody().get("error"));
+    }
 }

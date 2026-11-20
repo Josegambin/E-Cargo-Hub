@@ -5,6 +5,7 @@ import com.ecargohub.backend.client.GraphHopperClient;
 import com.ecargohub.backend.dto.route.CreateRouteRequest;
 import com.ecargohub.backend.dto.route.RouteDto;
 import com.ecargohub.backend.entity.RouteEntity;
+import com.ecargohub.backend.exception.ExternalServiceUnavailableException;
 import com.ecargohub.backend.exception.ResourceNotFoundException;
 import com.ecargohub.backend.mapper.RouteMapper;
 import com.ecargohub.backend.mapper.GeoMapper;
@@ -24,11 +25,12 @@ public class RouteServiceImpl implements RouteService {
     private final GraphHopperClient graphHopperClient;
     private final GeoMapper geoMapper;
 
-    public RouteServiceImpl(RouteRepository routeRepository, RouteMapper routeMapper) {
+    public RouteServiceImpl(RouteRepository routeRepository, RouteMapper routeMapper,
+            GraphHopperClient graphHopperClient, GeoMapper geoMapper) {
         this.routeRepository = routeRepository;
         this.routeMapper = routeMapper;
-        this.graphHopperClient = new GraphHopperClient();
-        this.geoMapper = null;
+        this.graphHopperClient = graphHopperClient;
+        this.geoMapper = geoMapper;
     }
 
     @Override
@@ -75,6 +77,9 @@ public class RouteServiceImpl implements RouteService {
             entity.setGeometry(geoMapper.toEntity(result.geometry()));
             entity.setStatus(RouteStatusEnum.READY);
 
+        } catch (ExternalServiceUnavailableException e) {
+            entity.setStatus(RouteStatusEnum.ERROR);
+            throw e;
         } catch (Exception e) {
             entity.setStatus(RouteStatusEnum.ERROR);
             throw new IllegalStateException("Error calculando ruta: " + e.getMessage(), e);

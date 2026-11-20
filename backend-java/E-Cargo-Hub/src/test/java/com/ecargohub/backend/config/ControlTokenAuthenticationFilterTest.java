@@ -1,5 +1,6 @@
 package com.ecargohub.backend.config;
 
+import com.ecargohub.backend.exception.ApiErrorResponseWriter;
 import jakarta.servlet.ServletException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -7,6 +8,7 @@ import org.springframework.mock.web.MockFilterChain;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.core.context.SecurityContextHolder;
+import tools.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 
@@ -16,6 +18,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class ControlTokenAuthenticationFilterTest {
 
     private static final String TOKEN = "a-secret-control-token-with-at-least-32-bytes";
+    private final ApiErrorResponseWriter errorResponseWriter = new ApiErrorResponseWriter(new ObjectMapper());
 
     @AfterEach
     void clearSecurityContext() {
@@ -24,15 +27,16 @@ class ControlTokenAuthenticationFilterTest {
 
     @Test
     void rejectsMissingTokenForVehicleCommands() throws ServletException, IOException {
-        MockHttpServletResponse response = executeFilter(new ControlTokenAuthenticationFilter(TOKEN),
+        MockHttpServletResponse response = executeFilter(new ControlTokenAuthenticationFilter(TOKEN, errorResponseWriter),
                 controlRequest("/api/v1/vehicles/1/commands", null));
 
         assertEquals(401, response.getStatus());
+        assertTrue(response.getContentAsString().contains("\"error\":\"UNAUTHORIZED\""));
     }
 
     @Test
     void rejectsIncorrectTokenForFleetCommands() throws ServletException, IOException {
-        MockHttpServletResponse response = executeFilter(new ControlTokenAuthenticationFilter(TOKEN),
+        MockHttpServletResponse response = executeFilter(new ControlTokenAuthenticationFilter(TOKEN, errorResponseWriter),
                 controlRequest("/api/v1/fleet/commands", "wrong-token"));
 
         assertEquals(401, response.getStatus());
@@ -40,7 +44,7 @@ class ControlTokenAuthenticationFilterTest {
 
     @Test
     void rejectsControlCommandsWhenTokenIsNotConfigured() throws ServletException, IOException {
-        MockHttpServletResponse response = executeFilter(new ControlTokenAuthenticationFilter(""),
+        MockHttpServletResponse response = executeFilter(new ControlTokenAuthenticationFilter("", errorResponseWriter),
                 controlRequest("/api/v1/vehicles/1/aaos/simulated-commands", TOKEN));
 
         assertEquals(503, response.getStatus());
@@ -48,7 +52,8 @@ class ControlTokenAuthenticationFilterTest {
 
     @Test
     void rejectsControlCommandsWhenConfiguredTokenIsTooShort() throws ServletException, IOException {
-        MockHttpServletResponse response = executeFilter(new ControlTokenAuthenticationFilter("short-token"),
+        MockHttpServletResponse response = executeFilter(
+                new ControlTokenAuthenticationFilter("short-token", errorResponseWriter),
                 controlRequest("/api/v1/vehicles/1/commands", "short-token"));
 
         assertEquals(503, response.getStatus());
@@ -59,7 +64,8 @@ class ControlTokenAuthenticationFilterTest {
         MockHttpServletRequest request = controlRequest("/api/v1/simulations/2/start", TOKEN);
         MockFilterChain chain = new MockFilterChain();
 
-        new ControlTokenAuthenticationFilter(TOKEN).doFilter(request, new MockHttpServletResponse(), chain);
+        new ControlTokenAuthenticationFilter(TOKEN, errorResponseWriter)
+                .doFilter(request, new MockHttpServletResponse(), chain);
 
         assertTrue(SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream()
                 .anyMatch(authority -> authority.getAuthority().equals("ROLE_CONTROL_SERVICE")));
@@ -72,7 +78,20 @@ class ControlTokenAuthenticationFilterTest {
         request.setServletPath("/api/v1/vehicles/1/commands");
         MockFilterChain chain = new MockFilterChain();
 
-        new ControlTokenAuthenticationFilter(TOKEN).doFilter(request, new MockHttpServletResponse(), chain);
+        new ControlTokenAuthenticationFilter(TOKEN, errorResponseWriter)
+                .doFilter(request, new MockHttpServletResponse(), chain);
+
+        assertTrue(chain.getRequest() != null);
+    }
+
+    @Test
+    void letsBearerAuthenticationHandleDashboardControlRequests() throws ServletException, IOException {
+        MockHttpServletRequest request = controlRequest("/api/v1/vehicles/1/commands", null);
+        request.addHeader("Authorization", "Bearer dashboard-jwt");
+        MockFilterChain chain = new MockFilterChain();
+
+        new ControlTokenAuthenticationFilter(TOKEN, errorResponseWriter)
+                .doFilter(request, new MockHttpServletResponse(), chain);
 
         assertTrue(chain.getRequest() != null);
     }

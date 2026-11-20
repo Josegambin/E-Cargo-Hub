@@ -57,6 +57,9 @@ export class SimulationsService extends BaseService {
 
         let localVarHeaders = this.defaultHeaders;
 
+        // authentication (BearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('BearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
+
         const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
             'application/json'
         ]);
@@ -123,6 +126,9 @@ export class SimulationsService extends BaseService {
 
         let localVarHeaders = this.defaultHeaders;
 
+        // authentication (BearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('BearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
+
         const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
             'application/json'
         ]);
@@ -174,6 +180,9 @@ export class SimulationsService extends BaseService {
     public getSimulations(observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
 
         let localVarHeaders = this.defaultHeaders;
+
+        // authentication (BearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('BearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
 
         const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
             'application/json'
@@ -230,6 +239,9 @@ export class SimulationsService extends BaseService {
         }
 
         let localVarHeaders = this.defaultHeaders;
+
+        // authentication (BearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('BearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
 
         // authentication (ControlToken) required
         localVarHeaders = this.configuration.addCredentialToHeaders('ControlToken', 'X-Control-Token', localVarHeaders);
@@ -290,6 +302,9 @@ export class SimulationsService extends BaseService {
 
         let localVarHeaders = this.defaultHeaders;
 
+        // authentication (BearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('BearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
+
         // authentication (ControlToken) required
         localVarHeaders = this.configuration.addCredentialToHeaders('ControlToken', 'X-Control-Token', localVarHeaders);
 
@@ -349,6 +364,9 @@ export class SimulationsService extends BaseService {
 
         let localVarHeaders = this.defaultHeaders;
 
+        // authentication (BearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('BearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
+
         // authentication (ControlToken) required
         localVarHeaders = this.configuration.addCredentialToHeaders('ControlToken', 'X-Control-Token', localVarHeaders);
 
@@ -407,6 +425,9 @@ export class SimulationsService extends BaseService {
         }
 
         let localVarHeaders = this.defaultHeaders;
+
+        // authentication (BearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('BearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
 
         // authentication (ControlToken) required
         localVarHeaders = this.configuration.addCredentialToHeaders('ControlToken', 'X-Control-Token', localVarHeaders);

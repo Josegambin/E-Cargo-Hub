@@ -35,12 +35,18 @@ Todos los endpoints REST comienzan con `/api/v1`.
 | `401 Unauthorized` | No autenticado |
 | `403 Forbidden` | Sin permisos |
 | `404 Not Found` | Recurso no encontrado |
+| `405 Method Not Allowed` | Método HTTP no admitido por la ruta |
+| `406 Not Acceptable` | Formato de respuesta solicitado no admitido |
 | `409 Conflict` | Conflicto de estado (ej. vehículo ya en ruta) |
+| `429 Too Many Requests` | Límite por usuario/IP alcanzado; consultar `Retry-After` |
+| `415 Unsupported Media Type` | Tipo de contenido de la petición no admitido |
+| `503 Service Unavailable` | Dependencia necesaria no disponible |
 | `500 Internal Server Error` | Error del servidor |
 
 ### 1.5. Formato de errores
 
-Todos los errores devuelven el mismo formato JSON:
+Los errores de la API REST, incluidos los de autenticación/autorización, el filtro de control
+servidor-a-servidor y el límite de peticiones, usan este formato JSON:
 
 ```json
 {
@@ -52,11 +58,24 @@ Todos los errores devuelven el mismo formato JSON:
 }
 ```
 
+La respuesta `401` conserva además `WWW-Authenticate: Bearer`. Un `429` incluye `Retry-After`;
+si Redis no está disponible, el endpoint devuelve `503` de forma explícita.
+
 ### 1.6. Autenticación
 
-Las rutas de control requieren `X-Control-Token`, configurado mediante `ECARGO_CONTROL_API_TOKEN`.
-Las pantallas vinculadas usan una credencial independiente, limitada a consultar su propio estado.
-No incluyas ninguno de estos secretos en el panel administrativo ni en código público.
+La API del dashboard valida tokens JWT de Keycloak. `ADMIN` puede leer y modificar; `VIEWER` solo
+puede consultar, con la excepción de la lista de dispositivos, reservada a `ADMIN`.
+
+Las operaciones de control servidor-a-servidor aceptan un JWT `ADMIN` o `X-Control-Token`, que se
+configura mediante `ECARGO_CONTROL_API_TOKEN` y debe contener al menos 32 bytes UTF-8. Esto se aplica
+a los comandos de vehículo y flota, al inicio/pausa/reanudación/parada de simulaciones, a la escritura
+VHAL y al enrolamiento de dispositivos. Si se usa `X-Control-Token` y no está configurado, la petición
+responde `503`; si falta o no coincide, responde `401`. No incluyas este secreto en el dashboard ni
+en apps cliente.
+
+`POST /api/v1/device-enrollments/claim` es público y canjea un código temporal de un solo uso.
+`GET /api/v1/device/state` usa la credencial independiente `X-Vehicle-Device-Token`, limitada a
+consultar el estado vinculado. No incluyas esa credencial en el panel administrativo.
 
 ### Modelos y entidades
 
@@ -264,6 +283,9 @@ Devuelve el estado actual del vehículo (última posición conocida).
 }
 ```
 
+**Respuesta 404:** el vehículo no existe. La respuesta `IDLE` vacía solo se devuelve para un
+vehículo existente sin estado registrado.
+
 **Si el vehículo no tiene estado guardado:**
 
 ```json
@@ -424,13 +446,13 @@ Publica una notificación para la app del vehículo, que se suscribe a `/topic/v
 
 #### `POST /api/v1/vehicles/{vehicleId}/aaos/simulated-commands`
 
-Envía un comando al vehículo simulado asignado, no a los actuadores físicos del coche. Requiere la cabecera `X-Control-Token` configurada mediante `ECARGO_CONTROL_API_TOKEN` con al menos 32 bytes UTF-8. Consulta los tipos y las restricciones en la sección de comandos.
+Envía un comando al vehículo simulado asignado, no a los actuadores físicos del coche. Acepta un JWT `ADMIN` o la credencial servidor-a-servidor `X-Control-Token` (mínimo 32 bytes UTF-8). No envíes `X-Control-Token` desde la PWA ni desde el vehículo.
 
 ### 2.6. Comandos
 
 #### `POST /api/v1/vehicles/{vehicleId}/commands`
 
-Envía un comando a un vehículo. Requiere la cabecera `X-Control-Token` configurada mediante `ECARGO_CONTROL_API_TOKEN` con al menos 32 bytes UTF-8. La misma protección se aplica a `POST /api/v1/fleet/commands` y a las rutas de inicio, pausa, reanudación y parada de simulaciones. Si el token no está configurado o es demasiado corto, el control responde `503`; si falta o no coincide, responde `401`. No incluyas este secreto en clientes de navegador o apps del vehículo.
+Envía un comando a un vehículo. Acepta un JWT `ADMIN` o `X-Control-Token` configurado mediante `ECARGO_CONTROL_API_TOKEN` con al menos 32 bytes UTF-8. La misma protección se aplica a `POST /api/v1/fleet/commands`, a las rutas de inicio, pausa, reanudación y parada de simulaciones, y a la escritura VHAL. Si se usa `X-Control-Token` y no está configurado, el control responde `503`; si falta o no coincide, responde `401`. No incluyas este secreto en clientes de navegador o apps del vehículo.
 
 **Parámetros de ruta:**
 - `vehicleId` (Long) — ID del vehículo destinatario.
@@ -481,6 +503,8 @@ la distancia y el consumo configurado; al cruzar el 10% se genera una alerta `LO
 | `400` | Comando nulo o coordenadas fuera de rango |
 | `404` | Vehículo no encontrado |
 | `409` | Comando no válido para el estado actual del vehículo |
+| `429` | Se alcanzó el límite de peticiones; consulta `Retry-After` |
+| `503` | Redis limitador no disponible o servicio GraphHopper no configurado/no disponible |
 
 **Ejemplos por comando:**
 
@@ -530,6 +554,28 @@ la distancia y el consumo configurado; al cruzar el 10% se genera una alerta `LO
 ```
 El modo acepta `0` AUTO, `1` COOL y `2` HEAT; la temperatura debe estar entre `16` y `30` °C y el ventilador es un nivel entero de `0` a `7`.
 Apagar el encendido detiene la simulación en marcha; para iniciarla de nuevo hay que volver a encenderlo. El estado actual, incluido `climateOn`, `climateTemperatureC`, `climateFanSpeed` y `climateMode`, se consulta en `GET /api/v1/vehicles/{vehicleId}/aaos/control-state` y se publica en `/topic/vehicles/{vehicleId}/control-state`. Este estado vive en memoria y vuelve a los valores iniciales al reiniciar el backend.
+
+#### `GET /api/v1/vehicles/{vehicleId}/commands/vhal-status`
+
+Consulta el estado del puente VHAL para el vehículo. Requiere un JWT `ADMIN` o `VIEWER`.
+
+**Respuesta 200:**
+
+```json
+{
+  "vehicleId": 1,
+  "vhalEnabled": false,
+  "adb": "adb",
+  "serial": "emulator-5554",
+  "lastError": null,
+  "lastOutput": null
+}
+```
+
+El endpoint informa de la configuración y del último resultado; no comprueba por sí mismo que el
+emulador esté conectado. Devuelve `404` si el vehículo no existe.
+`POST /api/v1/vehicles/{vehicleId}/commands/vhal-write` requiere `ADMIN`
+o `X-Control-Token`, y además `ECARGO_VHAL_ENABLED=true` y un emulador AAOS disponible.
 
 #### `POST /api/v1/fleet/commands`
 
@@ -759,9 +805,14 @@ El comando usa la especificación versionada `openapi/openapi.yaml`; no depende 
 
 ## 5. Rate limiting
 
-**Estado actual:** sin límites.
+Los endpoints REST bajo `/api/v1/` comparten un límite distribuido de **100 peticiones por minuto**
+por usuario autenticado; las peticiones sin autenticar se limitan por dirección IP. Es una ventana
+fija sincronizada entre instancias mediante Redis.
 
-**Estado planificado:** rate limit por IP (ej. 100 req/min) en producción.
+Al superar el límite, la API responde `429 Too Many Requests`, incluye `Retry-After` en segundos y
+el formato de error común. Si Redis no está disponible, la API falla de forma explícita con
+`503 Service Unavailable` en vez de aceptar peticiones sin límite. Los valores se pueden configurar
+con `ECARGO_API_RATE_LIMIT_MAX_REQUESTS` y `ECARGO_API_RATE_LIMIT_WINDOW_SECONDS`.
 
 ---
 
@@ -798,8 +849,7 @@ La API sigue un versionado por URL (`/api/v1`, `/api/v2`).
 
 ### Medio plazo
 
-- Autenticación JWT en todos los endpoints.
-- Rate limiting.
+- Revisar periódicamente los permisos y las credenciales de servicio.
 - Endpoint `POST /api/v1/vehicles/{id}/redirect` para cambiar destino en marcha.
 
 ### Largo plazo

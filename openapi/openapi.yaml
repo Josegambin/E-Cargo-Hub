@@ -16,6 +16,11 @@ info:
       - Distribuir eventos en tiempo real mediante Kafka.
       - Exponer actualizaciones al frontend mediante WebSocket.
 
+    Todos los endpoints REST bajo /api/v1/ están sujetos a un límite distribuido de
+    100 peticiones por minuto por usuario autenticado o por IP si no hay autenticación.
+    El exceso responde 429 con Retry-After; si Redis no está disponible, responde 503.
+    Las respuestas 401/403 de seguridad pueden tener un formato distinto del esquema ApiError.
+
   contact:
     name: Simulador Logístico
     email: admin@simulador-logistico.local
@@ -23,6 +28,9 @@ info:
 servers:
   - url: http://localhost:8081
     description: Desarrollo local
+
+security:
+  - BearerAuth: []
 
 tags:
 
@@ -125,6 +133,7 @@ paths:
 
     post:
       security:
+        - BearerAuth: []
         - ControlToken: []
       tags:
         - Fleet
@@ -572,6 +581,7 @@ paths:
 
     post:
       security:
+        - BearerAuth: []
         - ControlToken: []
       tags:
         - Simulations
@@ -607,6 +617,7 @@ paths:
 
     post:
       security:
+        - BearerAuth: []
         - ControlToken: []
       tags:
         - Simulations
@@ -639,6 +650,7 @@ paths:
 
     post:
       security:
+        - BearerAuth: []
         - ControlToken: []
       tags:
         - Simulations
@@ -671,6 +683,7 @@ paths:
 
     post:
       security:
+        - BearerAuth: []
         - ControlToken: []
       tags:
         - Simulations
@@ -707,6 +720,7 @@ paths:
 
     post:
       security:
+        - BearerAuth: []
         - ControlToken: []
       tags:
         - Commands
@@ -758,6 +772,9 @@ paths:
         '409':
           $ref: '#/components/responses/Conflict'
 
+        '503':
+          description: GraphHopper no está configurado o no está disponible
+
     get:
       tags:
         - Commands
@@ -784,6 +801,7 @@ paths:
 
     post:
       security:
+        - BearerAuth: []
         - ControlToken: []
       tags:
         - Commands
@@ -828,6 +846,54 @@ paths:
         '400':
           $ref: '#/components/responses/BadRequest'
 
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/vehicles/{vehicleId}/commands/vhal-status:
+
+    get:
+      tags:
+        - Commands
+
+      summary: Consultar el estado del puente VHAL
+
+      operationId: getVhalBridgeStatus
+
+      description: |
+        Devuelve la configuración y el último resultado del puente VHAL.
+        No comprueba por sí mismo que el emulador esté conectado.
+
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+
+      responses:
+        '200':
+          description: Estado del puente VHAL
+          content:
+            application/json:
+              schema:
+                type: object
+                required:
+                  - vehicleId
+                  - vhalEnabled
+                properties:
+                  vehicleId:
+                    type: integer
+                    format: int64
+                  vhalEnabled:
+                    type: boolean
+                  adb:
+                    type: string
+                    nullable: true
+                  serial:
+                    type: string
+                    nullable: true
+                  lastError:
+                    type: string
+                    nullable: true
+                  lastOutput:
+                    type: string
+                    nullable: true
         '404':
           $ref: '#/components/responses/NotFound'
 
@@ -885,10 +951,13 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/VehicleStatusDto'
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   /api/v1/vehicles/{vehicleId}/device-enrollments:
     post:
       security:
+        - BearerAuth: []
         - ControlToken: []
       tags:
         - Vehicle devices
@@ -910,8 +979,52 @@ paths:
         '503':
           description: Token de control no configurado
 
+  /api/v1/vehicles/{vehicleId}/devices:
+    get:
+      tags:
+        - Vehicle devices
+      summary: Listar dispositivos vinculados al vehículo
+      operationId: listVehicleDevices
+      parameters:
+        - $ref: '#/components/parameters/VehicleId'
+      responses:
+        '200':
+          description: Dispositivos vinculados, sin incluir sus credenciales
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/VehicleDeviceSummary'
+        '403':
+          description: Se requiere el rol ADMIN
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /api/v1/devices/{deviceId}:
+    delete:
+      tags:
+        - Vehicle devices
+      summary: Revocar la credencial de un dispositivo
+      operationId: revokeVehicleDevice
+      parameters:
+        - name: deviceId
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Credencial revocada
+        '403':
+          description: Se requiere el rol ADMIN
+        '404':
+          $ref: '#/components/responses/NotFound'
+
   /api/v1/device-enrollments/claim:
     post:
+      security: []
       tags:
         - Vehicle devices
       summary: Reclamar un código de vinculación y obtener credencial de solo lectura
@@ -934,6 +1047,7 @@ paths:
 
   /api/v1/device/state:
     get:
+      security: []
       tags:
         - Vehicle devices
       summary: Obtener estado de solo lectura del vehículo vinculado
@@ -1156,6 +1270,7 @@ paths:
 
     post:
       security:
+        - BearerAuth: []
         - ControlToken: []
       tags:
         - AAOS
@@ -1246,6 +1361,10 @@ paths:
 components:
 
   securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
     ControlToken:
       type: apiKey
       in: header
@@ -2323,6 +2442,24 @@ components:
         deviceToken:
           type: string
           description: Secreto de solo lectura; almacenar de forma segura en el dispositivo.
+
+    VehicleDeviceSummary:
+      type: object
+      required: [deviceId, vehicleId, name, enabled, createdAt]
+      properties:
+        deviceId:
+          type: string
+          format: uuid
+        vehicleId:
+          type: integer
+          format: int64
+        name:
+          type: string
+        enabled:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
 
     VehicleDisplayState:
       type: object

@@ -27,7 +27,7 @@
                     <mat-icon class="text-[20px]">local_shipping</mat-icon>
                 </a>
                 <a routerLink="/commands" routerLinkActive="active"
-                   class="topbar-btn" matTooltip="Comandos">
+                   class="topbar-btn" matTooltip="Comandos" *ngIf="auth.hasRole('ADMIN')">
                     <mat-icon class="text-[20px]">play_circle</mat-icon>
                 </a>
                 <a routerLink="/telemetry" routerLinkActive="active"
@@ -72,9 +72,9 @@
             </button>
 
             <!-- Logout -->
-            <button class="px-4 py-2 rounded-full bg-accent-cyan text-[#1a1d24] font-semibold text-sm
+            <button (click)="logout()" class="px-4 py-2 rounded-full bg-accent-cyan text-[#1a1d24] font-semibold text-sm
                            hover:shadow-lg hover:shadow-accent-cyan/30 transition-all">
-                Logout
+                {{ auth.username || 'Logout' }} · Salir
             </button>
         </div>
 

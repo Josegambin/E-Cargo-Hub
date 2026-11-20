@@ -52,12 +52,14 @@ model/vehicleControlState.ts
 model/vehicleDeviceClaim.ts
 model/vehicleDeviceClaimRequest.ts
 model/vehicleDeviceEnrollment.ts
+model/vehicleDeviceSummary.ts
 model/vehicleDisplayState.ts
 model/vehicleEnergyType.ts
 model/vehiclePosition.ts
 model/vehicleStatus.ts
 model/vehicleStatusDto.ts
 model/vehicleType.ts
+model/vhalWriteRequest.ts
 model/warehouse.ts
 param.ts
 provide-api.ts

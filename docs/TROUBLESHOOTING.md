@@ -416,13 +416,16 @@ logging:
 **Solución:**
 
 1. **Verifica la API key** en https://graphhopper.com/dashboard/.
-2. **Actualiza la variable de entorno:**
+2. **Define la variable de entorno en la misma terminal desde la que arrancas el backend** (PowerShell):
 
-```yaml
-graphhopper:
-  api:
-    key: ${GRAPHHOPPER_API_KEY:tu-nueva-key}
+```powershell
+Set-Location .\backend-java\E-Cargo-Hub
+$env:GRAPHHOPPER_API_KEY = "<tu-api-key>"
+.\mvnw.cmd spring-boot:run
 ```
+
+`application.yaml` enlaza esa variable con `graphhopper.api.key`, que consumen ambos clientes.
+Reinicia cualquier backend que ya estuviera ejecutándose para que reciba la variable.
 
 ---
 

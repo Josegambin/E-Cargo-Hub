@@ -116,7 +116,7 @@ Frontend Angular ──REST────► Spring Boot API ──► PostgreSQL
 ```bash
 git clone https://github.com/jmgambin/E-Cargo-Hub.git
 cd E-Cargo-Hub
-docker compose up -d
+docker compose -f infrastructure/docker-compose.yml up -d
 ```
 
 Servicios disponibles:
@@ -124,18 +124,37 @@ Servicios disponibles:
 | Servicio | URL |
 |---|---|
 | Backend API | http://localhost:8081 |
+| Consola HTML de pruebas (backend) | http://localhost:8081/test-console/ |
+| Consola HTML de pruebas (XAMPP) | http://localhost/2%20DAW/DWC/test-console/ |
 | Swagger UI | http://localhost:8081/swagger-ui.html |
 | Frontend Angular | http://localhost:4200 |
+| Keycloak (solo desarrollo local) | http://localhost:8180 |
 | Kafka UI | http://localhost:8085 |
 | PostgreSQL | localhost:5432 |
 | Redis | localhost:6379 |
+
+### Acceso y roles
+
+La consola HTML de pruebas y el dashboard Angular usan OIDC con Keycloak: Authorization Code + PKCE (S256). La API valida los JWT y aplica los roles `ADMIN` y `VIEWER`; ocultar una opción en el cliente no sustituye la autorización del backend.
+
+1. Inicia la infraestructura con `docker compose up -d`. Keycloak importa el realm `e-cargo-hub` desde `infrastructure/keycloak/realm-export.json`.
+2. En la consola de Keycloak (`http://localhost:8180`, usuario local `admin`, contraseña `local-only-change-me`), crea usuarios y asígnales los roles de realm `ADMIN` o `VIEWER`. No se incluyen usuarios de aplicación ni contraseñas de demostración en el repositorio. El rol `VIEWER` solo permite lecturas; `ADMIN` permite operaciones de gestión. Si Keycloak ya tenía importado el realm, añade en el cliente `ecargo-dashboard` el URI de redirección `http://localhost:8081/test-console/` y el origen web `http://localhost:8081`; la importación inicial no modifica un realm existente.
+3. El cliente público `ecargo-dashboard` solo admite login estándar con PKCE. No configures un client secret en Angular. Para producción, cambia el URL de Keycloak, realm y client ID de `environment.prod.ts`, configura los URI exactos de redirección/orígenes del dashboard en Keycloak y fija `ECARGO_CORS_ALLOWED_ORIGINS` con los dominios reales.
+
+Las credenciales están separadas por propósito:
+
+- **Dashboard:** JWT de usuario emitido por Keycloak. No se guarda un token de control compartido en el navegador.
+- **Android/pantalla de vehículo:** código de pairing de un solo uso y token propio del dispositivo, limitado a consultar `/api/v1/device/state`.
+- **`ECARGO_CONTROL_API_TOKEN`:** solo para clientes de confianza servidor-a-servidor. No lo incluyas en Angular, Android ni en archivos de entorno publicados.
+
+La configuración Keycloak de Docker Compose usa `start-dev` y una contraseña de desarrollo por defecto: es exclusivamente local y no debe reutilizarse en producción.
 
 ### Arrancar en desarrollo (sin Docker)
 
 **1. Levantar la infraestructura:**
 
 ```bash
-docker compose up -d simulador-postgres simulador-kafka simulador-kafka-ui simulador-redis
+docker compose -f infrastructure/docker-compose.yml up -d postgres kafka kafka-ui simulador-redis keycloak
 ```
 
 **2. Arrancar el backend:**
@@ -159,6 +178,30 @@ npm start
 http://localhost:4200
 ```
 
+### Consola HTML para pruebas del backend (sin Angular)
+
+Arranca el backend y Keycloak. Puedes abrir la consola servida por Spring en `http://localhost:8081/test-console/` o copiar `backend-java/E-Cargo-Hub/src/main/resources/static/test-console/` a XAMPP:
+
+- `C:\xampp\htdocs\2º DAW\DWC\test-console\` → `http://localhost/2%C2%BA%20DAW/DWC/test-console/`
+- `C:\xampp\htdocs\2 DAW\DWC\test-console\` → `http://localhost/2%20DAW/DWC/test-console/`
+
+La consola XAMPP se sirve en el puerto 80, pero conecta con la API en `http://localhost:8081` y Keycloak en `http://localhost:8180`. Si el realm ya existía antes de importar `infrastructure/keycloak/realm-export.json`, añade al cliente `ecargo-dashboard` los URI de redirección que correspondan a la carpeta usada y el origen web `http://localhost`. Incluye ambos orígenes localhost en `ECARGO_CORS_ALLOWED_ORIGINS` si defines esa variable manualmente.
+
+El flujo es:
+
+- Inicia sesión con usuario y contraseña en Keycloak mediante Authorization Code + PKCE. La contraseña nunca se introduce en la consola.
+- Al volver, la consola consulta `/api/v1/vehicles` con `Authorization: Bearer <access_token>` y muestra si el backend acepta el token.
+- Visualización del usuario/roles y cierre de sesión.
+- Resumen de vehículos y rutas, estados, comandos de simulación, conexión STOMP autenticada y vinculación de dispositivos.
+- Explorador generado desde `/v3/api-docs`, con parámetros y ejemplos de cuerpos editables para las operaciones publicadas.
+- Enlace a Swagger y acceso a la consola local de usuarios Keycloak.
+
+La consola no crea usuarios. Créales en Keycloak y asigna `ADMIN` o `VIEWER`. El token solo se mantiene en memoria; el botón de copia lo pone en el portapapeles de forma explícita para usarlo con Postman. El token dura cinco minutos por defecto y no debe guardarse ni compartirse.
+
+### Postman
+
+Importa `postman/E-Cargo-Hub.postman_collection.json` y `postman/E-Cargo-Hub.postman_environment.json`. Inicia sesión en la consola HTML y copia el access token al valor local de `accessToken` del entorno Postman. La colección usa el endpoint actual `/api/v1/vehicles/{vehicleId}/commands`; el token de control servidor-a-servidor no se debe poner en el navegador ni en Postman para probar como usuario. Ejecuta las peticiones de preparación antes de las que usan `vehicleId` o `routeId`. Las operaciones de control y borrado pueden cambiar o eliminar datos reales del entorno seleccionado.
+
 ---
 
 ## 📚 Documentación
@@ -180,6 +223,8 @@ Toda la documentación del proyecto está organizada en la carpeta `docs/`:
 
 **API interactiva:** Swagger UI en http://localhost:8081/swagger-ui.html
 
+**Pruebas Postman:** sigue [postman/README.md](./postman/README.md) para importar la colección y el entorno.
+
 ---
 
 ## 📡 API — Ejemplos rápidos
@@ -187,16 +232,12 @@ Toda la documentación del proyecto está organizada en la carpeta `docs/`:
 ### Enviar un comando START
 
 ```http
-POST /api/v1/vehicle-commands/vehicle/1
+POST /api/v1/vehicles/1/commands
 Content-Type: application/json
 
 {
   "command": "START",
-  "value": null,
-  "originLat": 38.1408,
-  "originLon": -0.8844,
-  "destLat": 37.9922,
-  "destLon": -1.1307
+  "routeId": 1
 }
 ```
 
@@ -217,6 +258,7 @@ GET /api/v1/vehicles/1/telemetry
 ```javascript
 const client = new Client({
   webSocketFactory: () => new SockJS('http://localhost:8081/ws'),
+  connectHeaders: { Authorization: `Bearer ${accessToken}` },
   onConnect: () => {
     client.subscribe('/topic/vehicle-status/1', (msg) => {
       console.log('Telemetría:', JSON.parse(msg.body));

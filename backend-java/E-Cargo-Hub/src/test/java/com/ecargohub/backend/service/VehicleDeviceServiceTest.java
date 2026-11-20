@@ -19,6 +19,7 @@ import java.time.Duration;
 import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -108,5 +109,19 @@ class VehicleDeviceServiceTest {
                 assertEquals(38.2, state.routeCoordinates().get(1)[0]);
                 assertEquals(208.33, state.estimatedRangeKm(), 0.01);
                 assertEquals(2625, state.estimatedRpm());
+        }
+
+        @Test
+        void revokingDeviceDisablesItsCredential() {
+                UUID deviceId = UUID.randomUUID();
+                VehicleDeviceEntity device = new VehicleDeviceEntity();
+                device.setId(deviceId);
+                device.setEnabled(true);
+                when(deviceRepository.findById(deviceId)).thenReturn(Optional.of(device));
+
+                service.revoke(deviceId);
+
+                assertFalse(device.isEnabled());
+                verify(deviceRepository).save(device);
         }
 }

@@ -25,6 +25,8 @@ import { VehicleDeviceClaimRequest } from '../model/vehicleDeviceClaimRequest';
 // @ts-ignore
 import { VehicleDeviceEnrollment } from '../model/vehicleDeviceEnrollment';
 // @ts-ignore
+import { VehicleDeviceSummary } from '../model/vehicleDeviceSummary';
+// @ts-ignore
 import { VehicleDisplayState } from '../model/vehicleDisplayState';
 
 // @ts-ignore
@@ -127,6 +129,9 @@ export class VehicleDevicesService extends BaseService {
 
         let localVarHeaders = this.defaultHeaders;
 
+        // authentication (BearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('BearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
+
         // authentication (ControlToken) required
         localVarHeaders = this.configuration.addCredentialToHeaders('ControlToken', 'X-Control-Token', localVarHeaders);
 
@@ -215,6 +220,124 @@ export class VehicleDevicesService extends BaseService {
         let localVarPath = `/api/v1/device/state`;
         const { basePath, withCredentials } = this.configuration;
         return this.httpClient.request<VehicleDisplayState>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Listar dispositivos vinculados al vehículo
+     * @endpoint get /api/v1/vehicles/{vehicleId}/devices
+     * @param vehicleId Identificador del vehículo
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public listVehicleDevices(vehicleId: number, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<Array<VehicleDeviceSummary>>;
+    public listVehicleDevices(vehicleId: number, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<Array<VehicleDeviceSummary>>>;
+    public listVehicleDevices(vehicleId: number, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<Array<VehicleDeviceSummary>>>;
+    public listVehicleDevices(vehicleId: number, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (vehicleId === null || vehicleId === undefined) {
+            throw new Error('Required parameter vehicleId was null or undefined when calling listVehicleDevices.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (BearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('BearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/vehicles/${this.configuration.encodeParam({name: "vehicleId", value: vehicleId, in: "path", style: "simple", explode: false, dataType: "number", dataFormat: "int64"})}/devices`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<Array<VehicleDeviceSummary>>('get', `${basePath}${localVarPath}`,
+            {
+                context: localVarHttpContext,
+                responseType: <any>responseType_,
+                ...(withCredentials ? { withCredentials } : {}),
+                headers: localVarHeaders,
+                observe: observe,
+                ...(localVarTransferCache !== undefined ? { transferCache: localVarTransferCache } : {}),
+                reportProgress: reportProgress
+            }
+        );
+    }
+
+    /**
+     * Revocar la credencial de un dispositivo
+     * @endpoint delete /api/v1/devices/{deviceId}
+     * @param deviceId
+     * @param observe set whether or not to return the data Observable as the body, response or events. defaults to returning the body.
+     * @param reportProgress flag to report request and response progress.
+     * @param options additional options
+     */
+    public revokeVehicleDevice(deviceId: string, observe?: 'body', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any>;
+    public revokeVehicleDevice(deviceId: string, observe?: 'response', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpResponse<any>>;
+    public revokeVehicleDevice(deviceId: string, observe?: 'events', reportProgress?: boolean, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<HttpEvent<any>>;
+    public revokeVehicleDevice(deviceId: string, observe: any = 'body', reportProgress: boolean = false, options?: {httpHeaderAccept?: 'application/json', context?: HttpContext, transferCache?: boolean}): Observable<any> {
+        if (deviceId === null || deviceId === undefined) {
+            throw new Error('Required parameter deviceId was null or undefined when calling revokeVehicleDevice.');
+        }
+
+        let localVarHeaders = this.defaultHeaders;
+
+        // authentication (BearerAuth) required
+        localVarHeaders = this.configuration.addCredentialToHeaders('BearerAuth', 'Authorization', localVarHeaders, 'Bearer ');
+
+        const localVarHttpHeaderAcceptSelected: string | undefined = options?.httpHeaderAccept ?? this.configuration.selectHeaderAccept([
+            'application/json'
+        ]);
+        if (localVarHttpHeaderAcceptSelected !== undefined) {
+            localVarHeaders = localVarHeaders.set('Accept', localVarHttpHeaderAcceptSelected);
+        }
+
+        const localVarHttpContext: HttpContext = options?.context ?? new HttpContext();
+
+        const localVarTransferCache: boolean = options?.transferCache ?? true;
+
+
+        let responseType_: 'text' | 'json' | 'blob' = 'json';
+        if (localVarHttpHeaderAcceptSelected) {
+            if (localVarHttpHeaderAcceptSelected.startsWith('text')) {
+                responseType_ = 'text';
+            } else if (this.configuration.isJsonMime(localVarHttpHeaderAcceptSelected)) {
+                responseType_ = 'json';
+            } else {
+                responseType_ = 'blob';
+            }
+        }
+
+        let localVarPath = `/api/v1/devices/${this.configuration.encodeParam({name: "deviceId", value: deviceId, in: "path", style: "simple", explode: false, dataType: "string", dataFormat: "uuid"})}`;
+        const { basePath, withCredentials } = this.configuration;
+        return this.httpClient.request<any>('delete', `${basePath}${localVarPath}`,
             {
                 context: localVarHttpContext,
                 responseType: <any>responseType_,

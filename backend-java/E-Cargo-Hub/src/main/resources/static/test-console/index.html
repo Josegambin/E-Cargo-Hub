@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light">
+    <title>E-Cargo Hub | Consola de pruebas</title>
+    <link rel="icon" href="data:,">
+    <link rel="stylesheet" href="./styles.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+</head>
+<body>
+<header class="topbar">
+    <a class="brand" href="./" aria-label="E-Cargo Hub, inicio">
+        <span class="brand-mark">EC</span>
+        <span><strong>E-Cargo Hub</strong><small>Consola local de pruebas</small></span>
+    </a>
+    <div class="session-area">
+        <div id="session-summary" class="session-summary">
+            <span class="status-dot"></span>
+            <span id="session-label">Sin iniciar sesión</span>
+            <span id="role-badges" class="badges"></span>
+        </div>
+        <button id="login-button" class="button button-primary" type="button">Iniciar sesión</button>
+        <button id="copy-token-button" class="button button-secondary" type="button" hidden>Copiar token para Postman</button>
+        <button id="logout-button" class="button button-secondary" type="button" hidden>Cerrar sesión</button>
+    </div>
+</header>
+
+<main class="page">
+    <section class="intro">
+        <div>
+            <p class="eyebrow">ENTORNO DE DESARROLLO</p>
+            <h1>Prueba el backend sin Angular</h1>
+            <p class="muted">Autenticación Keycloak, monitorización de flota y explorador de todos los endpoints publicados por OpenAPI.</p>
+        </div>
+        <a id="swagger-link" class="button button-secondary" href="/swagger-ui.html" target="_blank" rel="noreferrer">Abrir Swagger</a>
+    </section>
+
+    <section class="card settings-card" aria-labelledby="settings-title">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">ACCESO EN 2 PASOS</p>
+                <h2 id="settings-title">Usuario → token → backend</h2>
+            </div>
+            <span id="api-status" class="status-pill status-neutral">Esperando inicio de sesión</span>
+        </div>
+        <ol class="auth-steps">
+            <li><strong>Inicia sesión en Keycloak</strong><span>Introduce allí tu usuario y contraseña; esta página nunca los recibe.</span></li>
+            <li><strong>Validamos el token en la API</strong><span>Al volver, consultamos la flota enviando el access token como Bearer.</span></li>
+        </ol>
+        <p id="feedback" class="feedback" role="status" aria-live="polite">Pulsa «Iniciar sesión» para comenzar.</p>
+        <p class="muted">El token se mantiene solo en memoria. El backend local es <code>http://localhost:8081</code>.</p>
+    </section>
+
+    <section class="stats-grid" aria-label="Resumen">
+        <article class="stat-card"><span>Vehículos</span><strong id="vehicle-count">—</strong></article>
+        <article class="stat-card"><span>En ruta</span><strong id="active-count">—</strong></article>
+        <article class="stat-card"><span>Rutas</span><strong id="route-count">—</strong></article>
+        <article class="stat-card"><span>Usuario</span><strong id="user-name">—</strong></article>
+    </section>
+
+    <section class="card" aria-labelledby="fleet-title">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">FLOTA EN TIEMPO REAL</p>
+                <h2 id="fleet-title">Vehículos</h2>
+            </div>
+            <div class="toolbar">
+                <span id="live-status" class="status-pill status-neutral">Desconectado</span>
+                <button id="refresh-fleet" class="button button-secondary" type="button">Actualizar</button>
+            </div>
+        </div>
+        <div id="map" class="map" aria-label="Mapa de posiciones de vehículos">
+            <p class="map-fallback">El mapa necesita conexión a Internet. La tabla y la consola siguen disponibles.</p>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th><th>Vehículo</th><th>Latitud</th><th>Longitud</th>
+                    <th>Velocidad</th><th>Progreso</th><th>Estado</th><th>Actualizado</th>
+                </tr>
+                </thead>
+                <tbody id="vehicle-rows">
+                <tr><td colspan="8" class="empty-row">Inicia sesión y actualiza la flota.</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <section class="workspace-grid">
+        <article class="card" aria-labelledby="command-title">
+            <p class="eyebrow">OPERACIÓN</p>
+            <h2 id="command-title">Comandos de simulación</h2>
+            <div class="form-grid">
+                <label>Vehículo<select id="command-vehicle"></select></label>
+                <label>Ruta (obligatoria para START)<select id="command-route"></select></label>
+            </div>
+            <div class="toolbar command-buttons">
+                <button class="button button-success admin-only" data-command="START" type="button">Iniciar</button>
+                <button class="button button-warning admin-only" data-command="PAUSE" type="button">Pausar</button>
+                <button class="button button-secondary admin-only" data-command="RESUME" type="button">Reanudar</button>
+                <button class="button button-danger admin-only" data-command="STOP" type="button">Detener</button>
+                <button id="command-history" class="button button-secondary" type="button">Ver historial</button>
+            </div>
+            <p class="muted">Las operaciones de escritura requieren el rol ADMIN. El backend sigue siendo quien autoriza cada petición.</p>
+        </article>
+
+        <article class="card" aria-labelledby="route-title">
+            <p class="eyebrow">CONFIGURACIÓN</p>
+            <h2 id="route-title">Crear ruta de prueba</h2>
+            <form id="route-form" class="form-grid">
+                <label class="span-two">Nombre<input name="name" value="Ruta de prueba" maxlength="150" required></label>
+                <label>Latitud origen<input name="originLat" type="number" step="any" value="38.1408" required></label>
+                <label>Longitud origen<input name="originLon" type="number" step="any" value="-0.8844" required></label>
+                <label>Latitud destino<input name="destinationLat" type="number" step="any" value="37.9922" required></label>
+                <label>Longitud destino<input name="destinationLon" type="number" step="any" value="-1.1307" required></label>
+                <button class="button button-primary admin-only" type="submit">Crear ruta</button>
+            </form>
+        </article>
+    </section>
+
+    <section class="workspace-grid">
+        <article class="card" aria-labelledby="device-title">
+            <p class="eyebrow">ANDROID / PANTALLA DE VEHÍCULO</p>
+            <h2 id="device-title">Vinculación de dispositivo</h2>
+            <p class="muted">Genera un código temporal como ADMIN. El dispositivo lo canjea una sola vez por su propia credencial de solo lectura.</p>
+            <div class="form-grid">
+                <label>Vehículo<select id="device-vehicle"></select></label>
+                <label>Nombre del dispositivo<input id="device-name" value="Pantalla de prueba" maxlength="100"></label>
+            </div>
+            <div class="toolbar">
+                <button id="create-enrollment" class="button button-primary admin-only" type="button">Generar código</button>
+                <button id="list-devices" class="button button-secondary admin-only" type="button">Ver dispositivos</button>
+            </div>
+            <pre id="device-result" class="result-box" aria-live="polite">Aún no se ha generado ningún código.</pre>
+            <div class="form-grid device-claim-form">
+                <label>Código temporal<input id="pairing-code" autocomplete="off"></label>
+                <label>Nombre del dispositivo<input id="claim-device-name" value="Pantalla Android de prueba" maxlength="100"></label>
+            </div>
+            <div class="toolbar">
+                <button id="claim-device" class="button button-secondary" type="button">Canjear código</button>
+                <label class="device-token-field">Token propio del dispositivo
+                    <input id="device-token" type="password" autocomplete="off">
+                </label>
+                <button id="check-device-state" class="button button-secondary" type="button">Consultar estado vinculado</button>
+            </div>
+        </article>
+
+        <article class="card" aria-labelledby="events-title">
+            <div class="section-heading">
+                <div><p class="eyebrow">WEBSOCKET / STOMP</p><h2 id="events-title">Eventos de flota</h2></div>
+                <button id="clear-events" class="button button-secondary" type="button">Limpiar vista</button>
+            </div>
+            <div id="fleet-events" class="event-log" aria-live="polite">
+                <p class="empty-row">Los eventos aparecerán cuando haya una sesión y una conexión en vivo.</p>
+            </div>
+        </article>
+    </section>
+
+    <section class="card" aria-labelledby="explorer-title">
+        <div class="section-heading">
+            <div>
+                <p class="eyebrow">COBERTURA DE API</p>
+                <h2 id="explorer-title">Explorador OpenAPI</h2>
+                <p class="muted">Carga las operaciones del contrato publicado por el backend. Los parámetros y el JSON de ejemplo se pueden editar antes de enviar.</p>
+            </div>
+            <button id="load-openapi" class="button button-secondary" type="button">Cargar endpoints</button>
+        </div>
+        <form id="api-form">
+            <div class="form-grid">
+                <label class="span-two">Endpoint<select id="operation-select" required>
+                    <option value="">Carga el contrato OpenAPI…</option>
+                </select></label>
+                <label>Método<input id="request-method" readonly></label>
+                <label class="span-two">Ruta<input id="request-path" spellcheck="false"></label>
+            </div>
+            <div id="parameter-fields" class="form-grid parameter-grid"></div>
+            <label id="body-label" class="body-label" hidden>JSON de la petición
+                <textarea id="request-body" rows="12" spellcheck="false"></textarea>
+            </label>
+            <div class="toolbar">
+                <button id="send-request" class="button button-primary" type="submit">Enviar petición</button>
+                <span id="operation-hint" class="muted"></span>
+            </div>
+        </form>
+        <div class="response-heading">
+            <h3>Respuesta</h3><span id="response-meta" class="muted">Sin petición</span>
+        </div>
+        <pre id="api-response" class="response-box" aria-live="polite">El resultado de la última petición aparecerá aquí.</pre>
+    </section>
+
+    <section class="card account-card">
+        <div>
+            <p class="eyebrow">USUARIOS Y ROLES</p>
+            <h2>Identidades de Keycloak</h2>
+            <p class="muted">Los usuarios pertenecen al realm <code>e-cargo-hub</code>. Inicia sesión con un usuario existente; ADMIN y VIEWER son roles de realm. No hay contraseñas de demostración incrustadas en esta consola.</p>
+        </div>
+        <a id="keycloak-users-link" class="button button-secondary" href="http://localhost:8180/admin/master/console/#/e-cargo-hub/users" target="_blank" rel="noreferrer">Administrar usuarios en Keycloak</a>
+    </section>
+
+    <footer>
+        <span>Consola de desarrollo · No contiene el token servidor-a-servidor <code>ECARGO_CONTROL_API_TOKEN</code>.</span>
+        <a href="/v3/api-docs" target="_blank" rel="noreferrer">OpenAPI JSON</a>
+    </footer>
+</main>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="./app.js" defer></script>
+</body>
+</html>

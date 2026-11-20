@@ -3,6 +3,7 @@ package com.ecargohub.backend.service;
 import com.ecargohub.backend.dto.device.VehicleDeviceClaimDto;
 import com.ecargohub.backend.dto.device.VehicleDeviceClaimRequest;
 import com.ecargohub.backend.dto.device.VehicleDeviceEnrollmentDto;
+import com.ecargohub.backend.dto.device.VehicleDeviceSummaryDto;
 import com.ecargohub.backend.dto.device.VehicleDisplayStateDto;
 import com.ecargohub.backend.dto.status.VehicleStatusDto;
 import com.ecargohub.backend.domain.enums.VehicleEnergyTypeEnum;
@@ -28,6 +29,7 @@ import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.util.Map;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -99,6 +101,27 @@ public class VehicleDeviceService {
         enrollment.setClaimedAt(now);
         enrollmentRepository.save(enrollment);
         return new VehicleDeviceClaimDto(deviceId, enrollment.getVehicle().getId(), token);
+    }
+
+    @Transactional(readOnly = true)
+    public List<VehicleDeviceSummaryDto> listForVehicle(Long vehicleId) {
+        if (!vehicleRepository.existsById(vehicleId)) {
+            throw new ResourceNotFoundException("Vehicle not found: " + vehicleId);
+        }
+        return deviceRepository.findByVehicleIdOrderByCreatedAtDesc(vehicleId).stream()
+                .map(device -> new VehicleDeviceSummaryDto(device.getId(), vehicleId, device.getName(),
+                        device.isEnabled(), device.getCreatedAt()))
+                .toList();
+    }
+
+    @Transactional
+    public void revoke(UUID deviceId) {
+        VehicleDeviceEntity device = deviceRepository.findById(deviceId)
+                .orElseThrow(() -> new ResourceNotFoundException("Vehicle device not found: " + deviceId));
+        if (device.isEnabled()) {
+            device.setEnabled(false);
+            deviceRepository.save(device);
+        }
     }
 
     @Transactional(readOnly = true)

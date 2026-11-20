@@ -58,6 +58,18 @@ services:
       KAFKA_CLUSTERS_0_NAME: simulador
       # Corregido: Conecta de forma interna al container_name usando el puerto secundario dedicado
       KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: simulador-kafka:9094
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:26.2.5
+    container_name: ecargo-keycloak
+    command: ["start-dev", "--import-realm"]
+    environment:
+      KC_BOOTSTRAP_ADMIN_USERNAME: ${KEYCLOAK_ADMIN_USERNAME:-admin}
+      KC_BOOTSTRAP_ADMIN_PASSWORD: ${KEYCLOAK_ADMIN_PASSWORD:-local-only-change-me}
+    ports:
+      - "127.0.0.1:8180:8080"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/e-cargo-hub.json:ro
   
   simulador-redis:
     image: redis:7 # Cambiado de 7-alpine a 7 (Debian) para evitar problemas de permisos

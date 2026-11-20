@@ -76,6 +76,16 @@ El backend de **E-Cargo Hub** es el **núcleo lógico** del sistema. Se encarga 
 
 **En una frase:** el backend recibe comandos por REST, los publica en Kafka, los procesa de forma asíncrona, calcula rutas, simula movimiento, persiste en BBDD y emite telemetría en tiempo real al frontend.
 
+## Autenticación y autorización
+
+El dashboard inicia sesión en Keycloak mediante OIDC Authorization Code + PKCE y envía un access token JWT. Spring Security valida la firma con las claves del issuer, comprueba el issuer y el cliente (`azp`) y convierte los roles de realm en autoridades:
+
+- `VIEWER`: acceso de lectura a la API y suscripciones de consulta por WebSocket.
+- `ADMIN`: lectura, gestión y comandos del dashboard.
+- `CONTROL_SERVICE`: credencial `X-Control-Token` separada para integraciones servidor-a-servidor; nunca se entrega a aplicaciones cliente.
+
+Android no usa la sesión de Keycloak ni el token de control. Reclama un código de pairing de un solo uso y recibe una credencial propia revocable que solo autoriza la consulta del estado asociado al dispositivo. El endpoint de reclamación es público porque la posesión del código temporal es la prueba de vinculación.
+
 ---
 
 ## 2. Arquitectura en capas

@@ -1,12 +1,14 @@
 package com.ecargohub.backend.service.geo;
 
 import com.ecargohub.backend.dto.route.RouteResponseDto;
+import com.ecargohub.backend.exception.ExternalServiceUnavailableException;
 import tools.jackson.databind.JsonNode;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
@@ -36,7 +38,7 @@ public class GraphHopperService {
 
     private final RestClient restClient;
 
-    @Value("${graphhopper.api.key}")
+    @Value("${graphhopper.api.key:}")
     private String apiKey;
 
     public GraphHopperService(@Value("${graphhopper.api.url}") String baseUrl) {
@@ -56,6 +58,10 @@ public class GraphHopperService {
         if (cached != null) {
             log.info("📦 Ruta servida desde caché: {} ({} puntos)", cacheKey, cached.coordinates().size());
             return cached;
+        }
+
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new ExternalServiceUnavailableException("GraphHopper API key is not configured");
         }
 
         // 2. Llamar a GraphHopper
@@ -100,6 +106,9 @@ public class GraphHopperService {
         } catch (IllegalStateException e) {
             log.error("❌ Unable to calculate a route with per-road speed limits: {}", e.getMessage());
             throw new IllegalStateException("Route unavailable: " + e.getMessage(), e);
+        } catch (RestClientException e) {
+            log.error("GraphHopper routing service is unavailable: {}", e.getMessage());
+            throw new ExternalServiceUnavailableException("GraphHopper routing service is unavailable", e);
         } catch (Exception e) {
             log.error("❌ Unable to calculate a route with per-road speed limits: {}", e.getMessage());
             throw new IllegalStateException("Could not calculate route from GraphHopper: " + e.getMessage(), e);

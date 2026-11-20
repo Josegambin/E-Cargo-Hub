@@ -6,10 +6,18 @@ import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
+import org.springframework.web.bind.MissingRequestHeaderException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.bind.MissingServletRequestParameterException;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.HttpMediaTypeNotAcceptableException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.OffsetDateTime;
 import java.util.Map;
@@ -25,6 +33,13 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, Object>> handleNotFound(ResourceNotFoundException ex, HttpServletRequest req) {
         log.warn("404 Not Found: {} → {}", req.getRequestURI(), ex.getMessage());
         return build(HttpStatus.NOT_FOUND, "NOT_FOUND", ex.getMessage(), req);
+    }
+
+    @ExceptionHandler(NoResourceFoundException.class)
+    public ResponseEntity<Map<String, Object>> handleUnknownEndpoint(NoResourceFoundException ex,
+            HttpServletRequest req) {
+        log.warn("404 Not Found: {}", req.getRequestURI());
+        return build(HttpStatus.NOT_FOUND, "NOT_FOUND", "Endpoint not found", req);
     }
 
     // ---------- 409 CONFLICT ----------
@@ -62,6 +77,45 @@ public class GlobalExceptionHandler {
         return build(HttpStatus.BAD_REQUEST, "BAD_REQUEST", msg, req);
     }
 
+    @ExceptionHandler({ HttpMessageNotReadableException.class, MethodArgumentTypeMismatchException.class,
+            MissingServletRequestParameterException.class, MissingRequestHeaderException.class })
+    public ResponseEntity<Map<String, Object>> handleInvalidRequest(Exception ex, HttpServletRequest req) {
+        String message;
+        if (ex instanceof MethodArgumentTypeMismatchException mismatch) {
+            message = "Invalid value for parameter '" + mismatch.getName() + "'";
+        } else if (ex instanceof MissingServletRequestParameterException missing) {
+            message = "Required parameter '" + missing.getParameterName() + "' is missing";
+        } else if (ex instanceof MissingRequestHeaderException missing) {
+            message = "Required header '" + missing.getHeaderName() + "' is missing";
+        } else {
+            message = "Malformed or unreadable request body";
+        }
+        log.warn("400 Bad Request: {} → {}", req.getRequestURI(), message);
+        return build(HttpStatus.BAD_REQUEST, "BAD_REQUEST", message, req);
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<Map<String, Object>> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex,
+            HttpServletRequest req) {
+        String message = "Request method '" + ex.getMethod() + "' is not supported";
+        log.warn("405 Method Not Allowed: {} → {}", req.getRequestURI(), message);
+        return build(HttpStatus.METHOD_NOT_ALLOWED, "METHOD_NOT_ALLOWED", message, req);
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<Map<String, Object>> handleUnsupportedMediaType(HttpMediaTypeNotSupportedException ex,
+            HttpServletRequest req) {
+        return build(HttpStatus.UNSUPPORTED_MEDIA_TYPE, "UNSUPPORTED_MEDIA_TYPE",
+                "The request content type is not supported", req);
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotAcceptableException.class)
+    public ResponseEntity<Map<String, Object>> handleNotAcceptable(HttpMediaTypeNotAcceptableException ex,
+            HttpServletRequest req) {
+        return build(HttpStatus.NOT_ACCEPTABLE, "NOT_ACCEPTABLE", "The requested response format is not supported",
+                req);
+    }
+
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Map<String, Object>> handleResponseStatus(ResponseStatusException ex,
             HttpServletRequest req) {
@@ -69,6 +123,13 @@ public class GlobalExceptionHandler {
         String message = ex.getReason() == null ? status.getReasonPhrase() : ex.getReason();
         log.warn("{} {}: {} → {}", status.value(), status.getReasonPhrase(), req.getRequestURI(), message);
         return build(status, status.name(), message, req);
+    }
+
+    @ExceptionHandler(ExternalServiceUnavailableException.class)
+    public ResponseEntity<Map<String, Object>> handleExternalServiceUnavailable(ExternalServiceUnavailableException ex,
+            HttpServletRequest req) {
+        log.error("503 Service Unavailable: {} -> {}", req.getRequestURI(), ex.getMessage(), ex);
+        return build(HttpStatus.SERVICE_UNAVAILABLE, "SERVICE_UNAVAILABLE", ex.getMessage(), req);
     }
 
     @ExceptionHandler(IllegalArgumentException.class)

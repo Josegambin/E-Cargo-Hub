@@ -120,6 +120,8 @@ public class VehicleCommandController {
     @GetMapping("/vhal-status")
     public ResponseEntity<java.util.Map<String, Object>> vhalStatus(
             @Parameter(description = "ID del vehículo", example = "1") @PathVariable Long vehicleId) {
+        vehicleRepository.findById(vehicleId).orElseThrow(
+                () -> new com.ecargohub.backend.exception.ResourceNotFoundException("Vehicle not found: " + vehicleId));
         java.util.Map<String, Object> body = new java.util.HashMap<>();
         body.put("vehicleId", vehicleId);
         body.put("vhalEnabled", vhalBridgeService.isEnabled());

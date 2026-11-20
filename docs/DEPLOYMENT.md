@@ -117,7 +117,13 @@ docker compose down -v           # Para y borra volúmenes (¡cuidado!)
 | `REDIS_PORT` | Puerto de Redis | `6379` |
 | `REDIS_PASSWORD` | Contraseña de Redis | `` |
 | `GRAPHHOPPER_API_KEY` | API key de GraphHopper | `***` |
-| `CORS_ALLOWED_ORIGINS` | Orígenes permitidos | `https://ecargohub.example` |
+| `KEYCLOAK_ISSUER_URI` | Emisor JWT del realm | `https://auth.example/realms/e-cargo-hub` |
+| `KEYCLOAK_JWKS_URI` | Claves públicas del realm | `https://auth.example/realms/e-cargo-hub/protocol/openid-connect/certs` |
+| `KEYCLOAK_CLIENT_ID` | Cliente permitido en `azp` | `ecargo-dashboard` |
+| `ECARGO_CONTROL_API_TOKEN` | Token servidor-a-servidor (mínimo 32 bytes UTF-8) | `***` |
+| `ECARGO_API_RATE_LIMIT_MAX_REQUESTS` | Máximo de peticiones REST por ventana | `100` |
+| `ECARGO_API_RATE_LIMIT_WINDOW_SECONDS` | Duración de la ventana REST | `60` |
+| `ECARGO_CORS_ALLOWED_ORIGINS` | Orígenes permitidos por CORS | `https://ecargohub.example` |
 
 ### 5.2. Frontend
 
@@ -137,11 +143,29 @@ DATABASE_PASSWORD=changeme
 KAFKA_BOOTSTRAP_SERVERS=kafka:9092
 REDIS_HOST=redis
 REDIS_PORT=6379
+REDIS_PASSWORD=
 GRAPHHOPPER_API_KEY=tu-api-key
-CORS_ALLOWED_ORIGINS=https://ecargohub.example
+KEYCLOAK_ISSUER_URI=https://auth.example/realms/e-cargo-hub
+KEYCLOAK_JWKS_URI=https://auth.example/realms/e-cargo-hub/protocol/openid-connect/certs
+KEYCLOAK_CLIENT_ID=ecargo-dashboard
+ECARGO_CONTROL_API_TOKEN=pon-aqui-un-secreto-aleatorio-de-al-menos-32-bytes
+ECARGO_API_RATE_LIMIT_MAX_REQUESTS=100
+ECARGO_API_RATE_LIMIT_WINDOW_SECONDS=60
+ECARGO_CORS_ALLOWED_ORIGINS=https://ecargohub.example
 ```
 
 **⚠️ IMPORTANTE:** añade `.env` a `.gitignore`.
+La clave de GraphHopper debe proporcionarse mediante `GRAPHHOPPER_API_KEY`; el backend no incluye
+una clave predeterminada. Redis debe estar disponible para aplicar el límite REST compartido. Si
+Redis falla, las peticiones `/api/v1/` responden `503` en vez de continuar sin protección.
+
+En Windows PowerShell, antes de arrancar el backend en esa misma terminal:
+
+```powershell
+Set-Location .\backend-java\E-Cargo-Hub
+$env:GRAPHHOPPER_API_KEY = "<tu-api-key>"
+.\mvnw.cmd spring-boot:run
+```
 
 ---
 

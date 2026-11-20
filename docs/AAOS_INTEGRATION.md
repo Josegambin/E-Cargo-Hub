@@ -16,6 +16,7 @@ El estado mostrado es el de la simulación E-Cargo Hub, **no propiedades del VHA
    $bytes = New-Object byte[] 32
    $rng.GetBytes($bytes)
    $env:ECARGO_CONTROL_API_TOKEN = [System.Convert]::ToBase64String($bytes)
+   $env:GRAPHHOPPER_API_KEY = "f9da97c3-e894-406e-823b-086ecd55b497"
    $rng.Dispose()
    Write-Host "Token para Postman: $env:ECARGO_CONTROL_API_TOKEN"
 

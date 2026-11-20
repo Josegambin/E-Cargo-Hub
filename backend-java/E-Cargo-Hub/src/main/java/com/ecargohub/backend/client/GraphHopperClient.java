@@ -2,26 +2,26 @@ package com.ecargohub.backend.client;
 
 import com.ecargohub.backend.dto.geo.GeoLineStringDto;
 import com.ecargohub.backend.dto.geo.GeoPointDto;
+import com.ecargohub.backend.exception.ExternalServiceUnavailableException;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestClient;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 
 @Component
 public class GraphHopperClient {
 
     private final RestClient restClient;
+    private final String apiKey;
 
-    @Value("${graphhopper.api.key}")
-    private String apiKey;
-
-    @Value("${graphhopper.api.url:https://graphhopper.com/api/1}")
-    private String baseUrl;
-
-    public GraphHopperClient() {
-        this.restClient = RestClient.builder().build();
+    public GraphHopperClient(@Value("${graphhopper.api.url:https://graphhopper.com/api/1}") String baseUrl,
+            @Value("${graphhopper.api.key:}") String apiKey) {
+        this.restClient = RestClient.builder().baseUrl(baseUrl).build();
+        this.apiKey = apiKey;
     }
 
     /**
@@ -30,13 +30,23 @@ public class GraphHopperClient {
      * @return GeoLineString con la geometría, distancia (m) y duración (s)
      */
     public GraphHopperRouteResult calculateRoute(GeoPointDto origin, GeoPointDto destination) {
-        // GraphHopper espera point=lat,lon
-        String points = String.format("%f,%f&point=%f,%f", origin.latitude(), origin.longitude(),
-                destination.latitude(), destination.longitude());
+        if (apiKey == null || apiKey.isBlank()) {
+            throw new ExternalServiceUnavailableException("GraphHopper API key is not configured");
+        }
 
         @SuppressWarnings("unchecked")
-        Map<String, Object> response = restClient.get().uri(baseUrl + "/route?key=" + apiKey + "&profile=car"
-                + "&point=" + points + "&points_encoded=false" + "&instructions=false").retrieve().body(Map.class);
+        Map<String, Object> response;
+        try {
+            response = restClient.get().uri(uriBuilder -> uriBuilder.path("/route").queryParam("key", apiKey)
+                    .queryParam("profile", "car")
+                    .queryParam("point", String.format(Locale.ROOT, "%f,%f", origin.latitude(), origin.longitude()))
+                    .queryParam("point",
+                            String.format(Locale.ROOT, "%f,%f", destination.latitude(), destination.longitude()))
+                    .queryParam("points_encoded", "false").queryParam("instructions", "false").build()).retrieve()
+                    .body(Map.class);
+        } catch (RestClientException ex) {
+            throw new ExternalServiceUnavailableException("GraphHopper routing service is unavailable", ex);
+        }
 
         if (response == null || !response.containsKey("paths")) {
             throw new IllegalStateException("GraphHopper no devolvió rutas");

@@ -1,0 +1,50 @@
+{
+  "realm": "e-cargo-hub",
+  "enabled": true,
+  "displayName": "E-Cargo Hub",
+  "accessTokenLifespan": 300,
+  "roles": {
+    "realm": [
+      {
+        "name": "ADMIN",
+        "description": "Puede gestionar y controlar la flota"
+      },
+      {
+        "name": "VIEWER",
+        "description": "Puede consultar el dashboard y los datos de la flota"
+      }
+    ]
+  },
+  "clients": [
+    {
+      "clientId": "ecargo-dashboard",
+      "name": "E-Cargo Hub Dashboard",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": true,
+      "standardFlowEnabled": true,
+      "implicitFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": false,
+      "redirectUris": [
+        "http://localhost:4200/*",
+        "http://localhost:8081/test-console/",
+        "http://127.0.0.1:8081/test-console/",
+        "http://localhost/2%20DAW/DWC/test-console/",
+        "http://127.0.0.1/2%20DAW/DWC/test-console/",
+        "http://localhost/2%C2%BA%20DAW/DWC/test-console/",
+        "http://127.0.0.1/2%C2%BA%20DAW/DWC/test-console/"
+      ],
+      "webOrigins": [
+        "http://localhost:4200",
+        "http://localhost:8081",
+        "http://127.0.0.1:8081",
+        "http://localhost",
+        "http://127.0.0.1"
+      ],
+      "attributes": {
+        "pkce.code.challenge.method": "S256"
+      }
+    }
+  ]
+}
